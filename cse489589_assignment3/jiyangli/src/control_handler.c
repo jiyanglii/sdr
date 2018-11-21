@@ -1,6 +1,6 @@
 /**
- * @control_handler
- * @author  Swetank Kumar Saha <swetankk@buffalo.edu>
+ * @jiyangli_assignment3
+ * @author  Jiyang Li <jiyangli@buffalo.edu>
  * @version 1.0
  *
  * @section LICENSE
@@ -18,7 +18,7 @@
  *
  * @section DESCRIPTION
  *
- * Handler for the control plane.
+ * This contains the main function. Add further description here....
  */
 
 #include <sys/socket.h>
@@ -83,7 +83,7 @@ int new_control_conn(int sock_index)
     struct sockaddr_in remote_controller_addr;
 
     caddr_len = sizeof(remote_controller_addr);
-    fdaccept = accept(sock_index, (struct sockaddr *)&remote_controller_addr, &caddr_len);
+    fdaccept = accept(sock_index, (struct sockaddr *)&remote_controller_addr, (socklen_t *)&caddr_len);
     if(fdaccept < 0)
         ERROR("accept() failed");
 

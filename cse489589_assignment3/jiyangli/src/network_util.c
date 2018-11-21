@@ -21,22 +21,29 @@
  * This contains the main function. Add further description here....
  */
 
-#include "../include/global.h"
-#include "../include/connection_manager.h"
+#include <stdlib.h>
+#include <sys/socket.h>
 
-/**
- * main function
- *
- * @param  argc Number of arguments
- * @param  argv The argument list
- * @return 0 EXIT_SUCCESS
- */
-int main(int argc, char **argv)
+ssize_t recvALL(int sock_index, char *buffer, ssize_t nbytes)
 {
-    /*Start Here*/
+    ssize_t bytes = 0;
+    bytes = recv(sock_index, buffer, nbytes, 0);
 
-    sscanf(argv[1], "%" SCNu16, &CONTROL_PORT);
-    init(); // Initialize connection manager; This will block
+    if(bytes == 0) return -1;
+    while(bytes != nbytes)
+        bytes += recv(sock_index, buffer+bytes, nbytes-bytes, 0);
 
-    return 0;
+    return bytes;
+}
+
+ssize_t sendALL(int sock_index, char *buffer, ssize_t nbytes)
+{
+    ssize_t bytes = 0;
+    bytes = send(sock_index, buffer, nbytes, 0);
+
+    if(bytes == 0) return -1;
+    while(bytes != nbytes)
+        bytes += send(sock_index, buffer+bytes, nbytes-bytes, 0);
+
+    return bytes;
 }
