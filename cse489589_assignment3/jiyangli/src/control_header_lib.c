@@ -27,11 +27,11 @@
 #include "../include/global.h"
 #include "../include/control_header_lib.h"
 
-#ifndef PACKET_USING_STRUCT
-    #define CNTRL_RESP_CONTROL_CODE_OFFSET 0x04
-    #define CNTRL_RESP_RESPONSE_CODE_OFFSET 0x05
-    #define CNTRL_RESP_PAYLOAD_LEN_OFFSET 0x06
-#endif
+
+#define CNTRL_RESP_CONTROL_CODE_OFFSET 0x04
+#define CNTRL_RESP_RESPONSE_CODE_OFFSET 0x05
+#define CNTRL_RESP_PAYLOAD_LEN_OFFSET 0x06
+
 
 char* create_response_header(int sock_index, uint8_t control_code, uint8_t response_code, uint16_t payload_len)
 {
@@ -45,9 +45,6 @@ char* create_response_header(int sock_index, uint8_t control_code, uint8_t respo
 
         struct CONTROL_RESPONSE_HEADER *cntrl_resp_header;
     #endif
-    #ifndef PACKET_USING_STRUCT
-        char *cntrl_resp_header;
-    #endif
 
     struct sockaddr_in addr;
     socklen_t addr_size;
@@ -55,9 +52,6 @@ char* create_response_header(int sock_index, uint8_t control_code, uint8_t respo
     buffer = (char *) malloc(sizeof(char)*CNTRL_RESP_HEADER_SIZE);
     #ifdef PACKET_USING_STRUCT
         cntrl_resp_header = (struct CONTROL_RESPONSE_HEADER *) buffer;
-    #endif
-    #ifndef PACKET_USING_STRUCT
-        cntrl_resp_header = buffer;
     #endif
 
     addr_size = sizeof(struct sockaddr_in);
@@ -74,17 +68,6 @@ char* create_response_header(int sock_index, uint8_t control_code, uint8_t respo
         cntrl_resp_header->payload_len = htons(payload_len);
     #endif
 
-    #ifndef PACKET_USING_STRUCT
-        /* Controller IP Address */
-        memcpy(cntrl_resp_header, &(addr.sin_addr), sizeof(struct in_addr));
-        /* Control Code */
-        memcpy(cntrl_resp_header+CNTRL_RESP_CONTROL_CODE_OFFSET, &control_code, sizeof(control_code));
-        /* Response Code */
-        memcpy(cntrl_resp_header+CNTRL_RESP_RESPONSE_CODE_OFFSET, &response_code, sizeof(response_code));
-        /* Payload Length */
-        payload_len = htons(payload_len);
-        memcpy(cntrl_resp_header+CNTRL_RESP_PAYLOAD_LEN_OFFSET, &payload_len, sizeof(payload_len));
-    #endif
 
     return buffer;
 }

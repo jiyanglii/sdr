@@ -32,6 +32,7 @@
 #include "../include/network_util.h"
 #include "../include/control_header_lib.h"
 #include "../include/author.h"
+#include "../include/routing_alg.h"
 
 #ifndef PACKET_USING_STRUCT
     #define CNTRL_CONTROL_CODE_OFFSET 0x04
@@ -130,22 +131,16 @@ bool control_recv_hook(int sock_index)
     }
 
     /* Get control code and payload length from the header */
-    #ifdef PACKET_USING_STRUCT
-        /** ASSERT(sizeof(struct CONTROL_HEADER) == 8)
-          * This is not really necessary with the __packed__ directive supplied during declaration (see control_header_lib.h).
-          * If this fails, comment #define PACKET_USING_STRUCT in control_header_lib.h
-          */
-        BUILD_BUG_ON(sizeof(struct CONTROL_HEADER) != CNTRL_HEADER_SIZE); // This will FAIL during compilation itself; See comment above.
 
-        struct CONTROL_HEADER *header = (struct CONTROL_HEADER *) cntrl_header;
-        control_code = header->control_code;
-        payload_len = ntohs(header->payload_len);
-    #endif
-    #ifndef PACKET_USING_STRUCT
-        memcpy(&control_code, cntrl_header+CNTRL_CONTROL_CODE_OFFSET, sizeof(control_code));
-        memcpy(&payload_len, cntrl_header+CNTRL_PAYLOAD_LEN_OFFSET, sizeof(payload_len));
-        payload_len = ntohs(payload_len);
-    #endif
+    /** ASSERT(sizeof(struct CONTROL_HEADER) == 8)
+      * This is not really necessary with the __packed__ directive supplied during declaration (see control_header_lib.h).
+      * If this fails, comment #define PACKET_USING_STRUCT in control_header_lib.h
+      */
+    BUILD_BUG_ON(sizeof(struct CONTROL_HEADER) != CNTRL_HEADER_SIZE); // This will FAIL during compilation itself; See comment above.
+
+    struct CONTROL_HEADER *header = (struct CONTROL_HEADER *) cntrl_header;
+    control_code = header->control_code;
+    payload_len = ntohs(header->payload_len);
 
     free(cntrl_header);
 
@@ -165,6 +160,41 @@ bool control_recv_hook(int sock_index)
     switch(control_code){
         case 0: author_response(sock_index);
                 break;
+
+        case 0x01:
+            // INIT
+            break;
+
+
+        case 0x02:
+            // ROUTING TABLE
+            break;
+
+        case 0x03:
+            // UPDATE
+            break;
+
+        case 0x04:
+            // CRASH
+            break;
+
+        case 0x05:
+            // SENDFILE
+            break;
+
+        case 0x06:
+            // SENDFILE-STATS
+            break;
+
+        case 0x07:
+            // LAST_DATA_PACKET
+            break;
+
+        case 0x08:
+            // PE
+            break;
+
+        default:    break;
 
         /* .......
         case 1: init_response(sock_index, cntrl_payload);

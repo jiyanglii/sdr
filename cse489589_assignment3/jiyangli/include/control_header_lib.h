@@ -23,4 +23,20 @@
     };
 #endif
 
+    struct __attribute__((__packed__)) CONTROL_INIT_HEADER
+    {
+        uint16_t router_num;
+        uint16_t ttl;
+    };
+
+    struct __attribute__((__packed__)) CONTROL_INIT_ROUTER_INFO
+    {
+        uint16_t router_id;
+        uint16_t router_port_a;
+        uint16_t router_port_b;
+        uint16_t router_cost;
+        uint32_t router_ip;
+    };
+
+
 char* create_response_header(int sock_index, uint8_t control_code, uint8_t response_code, uint16_t payload_len);
