@@ -30,9 +30,11 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#include "../include/global.h"
 #include "../include/routing_alg.h"
 #include "../include/control_header_lib.h"
 #include "../include/connection_manager.h"
+#include "../include/control_handler.h"
 
 #define MAX_NODE_NUM 5
 
@@ -56,4 +58,10 @@ void router_init(char* init_payload){
         inet_ntop(AF_INET, &(node_table[i].raw_data.router_ip), (char *)&(node_table[i].router_ip_str) , sizeof(node_table[i].router_ip_str));
         ptr += sizeof(struct CONTROL_INIT_ROUTER_INFO);
     }
+
+
+    // For now, assume the first node in the list is self
+    // Create router port and data port using the info
+
+
 }
