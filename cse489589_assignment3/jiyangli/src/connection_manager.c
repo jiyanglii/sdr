@@ -26,6 +26,8 @@
 #include "../include/connection_manager.h"
 #include "../include/global.h"
 #include "../include/control_handler.h"
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 fd_set master_list, watch_list;
 int head_fd;
@@ -92,4 +94,37 @@ void init()
     head_fd = control_socket;
 
     main_loop();
+}
+
+void router_sock_init(uint16_t router_sock_num)
+{
+    // create router and data sock
+
+    // router socket
+    int sock;
+    struct sockaddr_in control_addr;
+    socklen_t addrlen = sizeof(control_addr);
+
+    sock = socket(AF_INET, SOCK_STREAM, 0);
+    if(sock < 0)
+        ERROR("socket() failed");
+
+    /* Make socket re-usable */
+    if(setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (int[]){1}, sizeof(int)) < 0)
+        ERROR("setsockopt() failed");
+
+    bzero(&control_addr, sizeof(control_addr));
+
+    control_addr.sin_family = AF_INET;
+    control_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    control_addr.sin_port = htons(router_sock_num);
+
+    if(bind(sock, (struct sockaddr *)&control_addr, sizeof(control_addr)) < 0)
+        ERROR("bind() failed");
+
+    if(listen(sock, 5) < 0)
+        ERROR("listen() failed");
+
+
+
 }

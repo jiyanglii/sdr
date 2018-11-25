@@ -56,12 +56,11 @@
         uint16_t seq;
     };
 
-    struct __attribute__((__packed__)) CONTROL_RESPONSE_FILESTATS_HEADER   //Control code 0x06  
+    struct __attribute__((__packed__)) CONTROL_RESPONSE_FILESTATS_HEADER   //Control code 0x06
     {
         uint8_t transfer_id;
         uint8_t ttl;
         uint16_t padding;
     };
 
-#endif
 char* create_response_header(int sock_index, uint8_t control_code, uint8_t response_code, uint16_t payload_len);
