@@ -5,7 +5,6 @@
 
 #define PACKET_USING_STRUCT // Comment this out to use alternate packet crafting technique
 
-#ifdef PACKET_USING_STRUCT
     struct __attribute__((__packed__)) CONTROL_HEADER
     {
         uint32_t dest_ip_addr;
@@ -33,8 +32,8 @@
     struct __attribute__((__packed__)) CONTROL_INIT_ROUTER_INFO
     {
         uint16_t router_id;
-        uint16_t router_port_a;
-        uint16_t router_port_b;
+        uint16_t router_router_port;
+        uint16_t router_data_port;
         uint16_t router_cost;
         uint32_t router_ip;
     };
