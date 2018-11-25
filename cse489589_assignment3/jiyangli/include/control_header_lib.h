@@ -22,6 +22,8 @@
         uint16_t payload_len;
     };
 
+// Below are the structs of control_payload and control_response_payload
+    
     struct __attribute__((__packed__)) CONTROL_INIT_HEADER
     {
         uint16_t router_num;
@@ -42,6 +44,14 @@
         struct CONTROL_INIT_ROUTER_INFO raw_data;
         char router_ip_str[INET_ADDRSTRLEN];
     };
+ 
+    struct __attribute__((__packed__)) CONTROL_ROUTING_TABLE                      //Control code 0x02
+    {
+        uint16_t router_id;
+        uint16_t padding;
+        uint16_t next_hop_id
+        uint16_t router_cost;
+    };
 
     struct __attribute__((__packed__)) CONTROL_UPDATE                     //Control code 0x03
     {
@@ -57,7 +67,7 @@
         uint16_t seq;
     };
 
-    struct __attribute__((__packed__)) CONTROL_RESPONSE_FILESTATS_HEADER   //Control code 0x06  
+    struct __attribute__((__packed__)) CONTROL_FILESTATS_HEADER                    //Control code 0x06  
     {
         uint8_t transfer_id;
         uint8_t ttl;
