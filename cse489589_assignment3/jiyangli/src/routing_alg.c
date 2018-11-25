@@ -60,11 +60,14 @@ void router_init(char* init_payload){
 
     for(int i=0;i<active_node_num;i++){
         node_table[i].raw_data = *((struct CONTROL_INIT_ROUTER_INFO *)ptr);
+        node_table[i].raw_data.router_ip = node_table[i].raw_data.router_ip;
         inet_ntop(AF_INET, &(node_table[i].raw_data.router_ip), (char *)&(node_table[i].router_ip_str) , sizeof(node_table[i].router_ip_str));
         ptr += sizeof(struct CONTROL_INIT_ROUTER_INFO);
 
 #ifdef DEBUG
-    printf("node_table[%d] router_port_a: %hu\n", i, node_table[i].router_port_a);
+    printf("node_table[%d] router_ip: %d\n", i, node_table[i].raw_data.router_ip);
+    printf("node_table[%d] router_ip_str: %s\n", i, node_table[i].router_ip_str);
+    printf("node_table[%d] router_port_a: %d\n", i, node_table[i].raw_data.router_port_a);
 #endif
     }
 }
