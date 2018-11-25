@@ -169,10 +169,12 @@ bool control_recv_hook(int sock_index)
 
         case 0x02:
             // ROUTING TABLE
+            routing_table_response(sock_index);
             break;
 
         case 0x03:
             // UPDATE
+            router_update(char* update_payload)
             break;
 
         case 0x04:
@@ -185,6 +187,7 @@ bool control_recv_hook(int sock_index)
 
         case 0x06:
             // SENDFILE-STATS
+            filestats_response(sock_index);
             break;
 
         case 0x07:
