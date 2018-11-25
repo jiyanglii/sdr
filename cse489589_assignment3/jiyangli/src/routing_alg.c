@@ -32,6 +32,8 @@
 #include "../include/control_header_lib.h"
 #include "../include/connection_manager.h"
 
+#define DEBUG
+
 #define MAX_NODE_NUM 5
 
 static struct CONTROL_INIT_ROUTER_INFO node_table[MAX_NODE_NUM] = {0};
@@ -49,8 +51,18 @@ void router_init(char* init_payload){
     active_node_num = header.router_num;
     router_update_ttl = header.ttl;
 
+#ifdef DEBUG
+    printf("active_node_num: %hu\n", active_node_num);
+    printf("router_update_ttl: %hu\n", router_update_ttl);
+#endif
+
     for(int i=0;i<active_node_num;i++){
         node_table[i] = *((struct CONTROL_INIT_ROUTER_INFO *)ptr);
         ptr += sizeof(struct CONTROL_INIT_ROUTER_INFO);
+
+#ifdef DEBUG
+    printf("node_table[%d] router_port_a: %hu\n", i, node_table[i].router_port_a);
+#endif
     }
 }
+
