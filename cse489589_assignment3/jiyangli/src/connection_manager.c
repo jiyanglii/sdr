@@ -21,6 +21,7 @@
  * This contains the main function. Add further description here....
  */
 
+#include <strings.h>
 #include <sys/select.h>
 
 #include "../include/connection_manager.h"
