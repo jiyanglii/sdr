@@ -38,5 +38,11 @@
         uint32_t router_ip;
     };
 
+    struct ROUTER_INFO
+    {
+        struct CONTROL_INIT_ROUTER_INFO raw_data;
+        char router_ip_str[INET_ADDRSTRLEN];
+    };
+
 
 char* create_response_header(int sock_index, uint8_t control_code, uint8_t response_code, uint16_t payload_len);
