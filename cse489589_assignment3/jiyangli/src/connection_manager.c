@@ -31,6 +31,7 @@
 #include <arpa/inet.h>
 
 fd_set master_list, watch_list;
+int control_socket, router_socket, data_socket;
 int head_fd;
 
 void main_loop()
