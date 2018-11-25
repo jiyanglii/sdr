@@ -27,6 +27,8 @@
 #include <sys/queue.h>
 #include <unistd.h>
 #include <string.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include "../include/routing_alg.h"
 #include "../include/control_header_lib.h"
@@ -34,7 +36,7 @@
 
 #define MAX_NODE_NUM 5
 
-static struct CONTROL_INIT_ROUTER_INFO node_table[MAX_NODE_NUM] = {0};
+static struct ROUTER_INFO node_table[MAX_NODE_NUM] = {0};
 
 static uint16_t active_node_num = 0;
 static uint16_t router_update_ttl = 0;
@@ -50,7 +52,8 @@ void router_init(char* init_payload){
     router_update_ttl = header.ttl;
 
     for(int i=0;i<active_node_num;i++){
-        node_table[i] = *((struct CONTROL_INIT_ROUTER_INFO *)ptr);
+        node_table[i].raw_data = *((struct CONTROL_INIT_ROUTER_INFO *)ptr);
+        inet_ntop(AF_INET, &(node_table[i].raw_data.router_ip), (char *)&(node_table[i].router_ip_str) , sizeof(node_table[i].router_ip_str));
         ptr += sizeof(struct CONTROL_INIT_ROUTER_INFO);
     }
 }
