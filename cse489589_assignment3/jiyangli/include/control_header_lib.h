@@ -42,5 +42,26 @@
         char router_ip_str[INET_ADDRSTRLEN];
     };
 
+    struct __attribute__((__packed__)) CONTROL_UPDATE                     //Control code 0x03
+    {
+        uint16_t router_id;
+        uint16_t router_cost;
+    };
 
+    struct __attribute__((__packed__)) CONTROL_SENDFILE_HEADER             //Control code 0x05
+    {
+        uint32_t dest_ip_addr;
+        uint8_t init_ttl;
+        uint8_t transfer_id;
+        uint16_t seq;
+    };
+
+    struct __attribute__((__packed__)) CONTROL_RESPONSE_FILESTATS_HEADER   //Control code 0x06  
+    {
+        uint8_t transfer_id;
+        uint8_t ttl;
+        uint16_t padding;
+    };
+
+#endif
 char* create_response_header(int sock_index, uint8_t control_code, uint8_t response_code, uint16_t payload_len);
