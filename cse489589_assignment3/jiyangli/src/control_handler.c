@@ -163,6 +163,7 @@ bool control_recv_hook(int sock_index)
 
         case 0x01:
             // INIT
+            router_init(cntrl_payload);
             break;
 
 

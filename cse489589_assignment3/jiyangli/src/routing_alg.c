@@ -30,3 +30,27 @@
 
 #include "../include/routing_alg.h"
 #include "../include/control_header_lib.h"
+#include "../include/connection_manager.h"
+
+#define MAX_NODE_NUM 5
+
+static struct CONTROL_INIT_ROUTER_INFO node_table[MAX_NODE_NUM] = {0};
+
+static uint16_t active_node_num = 0;
+static uint16_t router_update_ttl = 0;
+
+void router_init(char* init_payload){
+    struct CONTROL_INIT_HEADER header;
+    char * ptr = init_payload;
+
+    header = *((struct CONTROL_INIT_HEADER *)ptr);
+    ptr += sizeof(struct CONTROL_INIT_HEADER);
+
+    active_node_num = header.router_num;
+    router_update_ttl = header.ttl;
+
+    for(int i=0;i<active_node_num;i++){
+        node_table[i] = *((struct CONTROL_INIT_ROUTER_INFO *)ptr);
+        ptr += sizeof(struct CONTROL_INIT_ROUTER_INFO);
+    }
+}
