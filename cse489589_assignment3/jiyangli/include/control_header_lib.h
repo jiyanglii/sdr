@@ -48,7 +48,7 @@
     {
         uint16_t router_id;
         uint16_t padding;
-        uint16_t next_hop_id
+        uint16_t next_hop_id;
         uint16_t router_cost;
     };
 
@@ -73,5 +73,4 @@
         uint16_t padding;
     };
 
-#endif
 char* create_response_header(int sock_index, uint8_t control_code, uint8_t response_code, uint16_t payload_len);

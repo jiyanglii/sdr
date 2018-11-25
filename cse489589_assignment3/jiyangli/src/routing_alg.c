@@ -69,7 +69,7 @@ void router_init(char* init_payload){
 #ifdef DEBUG
     printf("node_table[%d] router_ip: %d\n", i, node_table[i].raw_data.router_ip);
     printf("node_table[%d] router_ip_str: %s\n", i, node_table[i].router_ip_str);
-    printf("node_table[%d] router_port_a: %d\n", i, node_table[i].raw_data.router_port_a);
+    printf("node_table[%d] router_port_a: %d\n", i, node_table[i].raw_data.router_router_port);
 #endif
 
     }
@@ -88,8 +88,8 @@ void router_update(char* update_payload){
 
     cntrl_update = *((struct CONTROL_UPDATE *)ptr);
 
-    router_update_id = cntrl_update.router_id;
-    router_update_cost = cntrl_update.router_cost;
+    uint16_t router_update_id = cntrl_update.router_id;
+    uint16_t router_update_cost = cntrl_update.router_cost;
 
 }
 
@@ -99,8 +99,8 @@ void routing_table_response(int sock_index){
     char *cntrl_response_header, *cntrl_response;
     struct CONTROL_ROUTING_TABLE cntrl_routing_table[MAX_NODE_NUM];
 
-    payload_len = sizeof(cntrl_routing_table); 
-    cntrl_response_payload = (char *) malloc(payload_len);
+    payload_len = sizeof(struct CONTROL_ROUTING_TABLE) * MAX_NODE_NUM; 
+    // char * cntrl_response_payload = (char *) malloc(payload_len);
 
     cntrl_response_header = create_response_header(sock_index, 0, 0, payload_len);
 
@@ -109,10 +109,10 @@ void routing_table_response(int sock_index){
 
 }
 
-void filestats_response(int sock_index){
+// void filestats_response(int sock_index){
 
-    cntrl_response_header = create_response_header(sock_index, 0, 0, payload_len);
+//     cntrl_response_header = create_response_header(sock_index, 0, 0, payload_len);
 
 
-}
+// }
 
