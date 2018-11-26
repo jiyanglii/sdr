@@ -31,6 +31,15 @@
 
 #include "../include/global.h"
 
+
+/* Linked List for active data connections */
+struct DataConn
+{
+    int sockfd;
+    LIST_ENTRY(DataConn) next;
+}*connection, *conn_temp;
+LIST_HEAD(DataConnsHead, DataConn) data_conn_list;
+
 int create_data_sock(uint16_t data_sock_num)
 {
     int sock;
@@ -71,10 +80,24 @@ int new_data_conn(int sock_index)
     if(fdaccept < 0)
         ERROR("accept() failed");
 
-    /* Insert into list of active control connections
-    connection = malloc(sizeof(struct ControlConn));
+    /* Insert into list of active control connections*/
+    connection = malloc(sizeof(struct DataConn));
     connection->sockfd = fdaccept;
-    LIST_INSERT_HEAD(&control_conn_list, connection, next);*/
+    LIST_INSERT_HEAD(&data_conn_list, connection, next);
 
     return fdaccept;
+}
+
+bool isData(int sock_index)
+{
+    LIST_FOREACH(connection, &data_conn_list, next)
+        if(connection->sockfd == sock_index) return TRUE;
+
+    return FALSE;
+}
+
+
+bool data_recv_hook(int sock_index)
+{
+    return TRUE;
 }

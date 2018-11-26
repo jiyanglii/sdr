@@ -79,7 +79,9 @@ void main_loop()
                     if(isControl(sock_index)){
                         if(!control_recv_hook(sock_index)) FD_CLR(sock_index, &master_list);
                     }
-                    //else if isData(sock_index);
+                    else if (isData(sock_index)){
+                        if(!data_recv_hook(sock_index)) FD_CLR(sock_index, &master_list);
+                    }
                     else ERROR("Unknown socket index");
                 }
             }
