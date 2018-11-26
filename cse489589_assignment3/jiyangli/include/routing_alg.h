@@ -29,3 +29,12 @@ struct __attribute__((__packed__)) ROUTING_UPDATE
     uint16_t router_id;
     uint16_t router_cost;
 };
+
+struct IPV4_ADDR
+{
+    uint32_t _ip;
+    char _ip_str[INET_ADDRSTRLEN];
+};
+
+
+void GetPrimaryIP(struct IPV4_ADDR * local_ip);

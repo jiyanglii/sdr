@@ -99,5 +99,6 @@ bool isData(int sock_index)
 
 bool data_recv_hook(int sock_index)
 {
+    // Forwarding incoming data to next hop here
     return TRUE;
 }
