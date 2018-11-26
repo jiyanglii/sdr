@@ -27,6 +27,7 @@
 #include "../include/connection_manager.h"
 #include "../include/global.h"
 #include "../include/control_handler.h"
+#include "../include/data_handler.h"
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
@@ -66,7 +67,11 @@ void main_loop()
 
                 /* data_socket */
                 else if(sock_index == data_socket){
-                    //new_data_conn(sock_index);
+                    fdaccept = new_data_conn(sock_index);
+
+                    /* Add to watched socket list */
+                    FD_SET(fdaccept, &master_list);
+                    if(fdaccept > head_fd) head_fd = fdaccept;
                 }
 
                 /* Existing connection */
@@ -108,8 +113,12 @@ void router_sock_init(uint16_t router_sock_num)
     socklen_t addrlen = sizeof(control_addr);
 
     sock = socket(AF_INET, SOCK_STREAM, 0);
-    if(sock < 0)
+    if(sock < 0){
         ERROR("socket() failed");
+    }
+    else{
+        router_socket = sock;
+    }
 
     /* Make socket re-usable */
     if(setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (int[]){1}, sizeof(int)) < 0)
@@ -124,9 +133,22 @@ void router_sock_init(uint16_t router_sock_num)
     if(bind(sock, (struct sockaddr *)&control_addr, sizeof(control_addr)) < 0)
         ERROR("bind() failed");
 
-    if(listen(sock, 5) < 0)
-        ERROR("listen() failed");
+    /* Add to watched socket list */
+    FD_SET(router_socket, &master_list);
+    if(router_socket > head_fd) head_fd = router_socket;
+
+}
 
 
+void data_sock_init(uint16_t data_sock_num)
+{
+    // create data sock
+
+    // data socket
+    data_socket = create_data_sock(data_sock_num);
+
+    /* Add to watched socket list */
+    FD_SET(data_socket, &master_list);
+    if(data_socket > head_fd) head_fd = data_socket;
 
 }
