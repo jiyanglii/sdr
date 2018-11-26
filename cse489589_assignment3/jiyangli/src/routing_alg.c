@@ -108,11 +108,5 @@ void routing_table_response(int sock_index){
 
 }
 
-// void filestats_response(int sock_index){
 
-    uint16_t payload_len;
-    char * cntrl_response_header = create_response_header(sock_index, 0, 0, payload_len);
-
-
-// }
 
