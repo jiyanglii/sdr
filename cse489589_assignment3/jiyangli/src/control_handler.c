@@ -34,10 +34,10 @@
 #include "../include/author.h"
 #include "../include/routing_alg.h"
 
-#ifndef PACKET_USING_STRUCT
-    #define CNTRL_CONTROL_CODE_OFFSET 0x04
-    #define CNTRL_PAYLOAD_LEN_OFFSET 0x06
-#endif
+
+#define CNTRL_CONTROL_CODE_OFFSET 0x04
+#define CNTRL_PAYLOAD_LEN_OFFSET 0x06
+
 
 /* Linked List for active control connections */
 struct ControlConn
