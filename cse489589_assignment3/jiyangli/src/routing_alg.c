@@ -26,7 +26,9 @@
 #include <strings.h>
 #include <sys/queue.h>
 #include <unistd.h>
+#include <stdint.h>
 #include <string.h>
+#include <limits.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
@@ -80,7 +82,13 @@ void router_init(char* init_payload){
         {
             // This is the self node
             local_node_info = node_table[i];
-        }
+            node_table[i].self = TRUE;
+        }else node_table[i].self = FALSE;
+
+        if(node_table[i].raw_data.router_cost == UINT16_MAX){
+            node_table[i].neighbor = TRUE;
+        } else node_table[i].neighbor = FALSE;
+
 
 #ifdef DEBUG
     printf("node_table[%d] router_ip: %d\n", i, node_table[i].raw_data.router_ip);

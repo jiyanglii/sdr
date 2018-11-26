@@ -45,6 +45,8 @@
     {
         struct CONTROL_INIT_ROUTER_INFO raw_data;
         struct IPV4_ADDR ip;
+        bool self;
+        bool neighbor;
     };
 
     struct __attribute__((__packed__)) CONTROL_ROUTING_TABLE                      //Control code 0x02
