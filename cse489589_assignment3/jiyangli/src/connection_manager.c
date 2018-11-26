@@ -105,7 +105,7 @@ void init()
     main_loop();
 }
 
-void router_sock_init(uint16_t router_sock_num)
+void static router_sock_init(uint16_t router_sock_num)
 {
     // create router and data sock
 
@@ -142,7 +142,7 @@ void router_sock_init(uint16_t router_sock_num)
 }
 
 
-void data_sock_init(uint16_t data_sock_num)
+void static data_sock_init(uint16_t data_sock_num)
 {
     // create data sock
 
@@ -153,4 +153,10 @@ void data_sock_init(uint16_t data_sock_num)
     FD_SET(data_socket, &master_list);
     if(data_socket > head_fd) head_fd = data_socket;
 
+}
+
+void routing_sock_init(uint16_t router_sock_num, uint16_t data_sock_num)
+{
+    router_sock_init(router_sock_num);
+    data_sock_init(data_sock_num);
 }
