@@ -50,6 +50,7 @@ struct ROUTER_INFO
 };
 
 void GetPrimaryIP(struct IPV4_ADDR * local_ip);
+int get_next_hop(uint32_t dest_ip);
 
 extern struct ROUTER_INFO node_table[MAX_NODE_NUM];
 extern uint16_t active_node_num;

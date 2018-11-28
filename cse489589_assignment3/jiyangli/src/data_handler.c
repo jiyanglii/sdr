@@ -30,6 +30,8 @@
 
 
 #include "../include/global.h"
+#include "../include/network_util.h"
+#include "../include/data_handler.h"
 #include "../include/routing_alg.h"
 
 
@@ -139,8 +141,43 @@ bool isData(int sock_index)
 }
 
 
+void remove_data_conn(int sock_index)
+{
+    LIST_FOREACH(connection, &data_conn_list, next) {
+        if(connection->sockfd == sock_index) LIST_REMOVE(connection, next); // this may be unsafe?
+        free(connection);
+    }
+
+    close(sock_index);
+}
+
+void data_packet_update(struct DATA * _data)
+{
+    _data->ttl--;
+}
+
 bool data_recv_hook(int sock_index)
 {
+    int next_hop_fd = 0;
+    struct DATA _data = {0};
+    char * raw_data = (char *) malloc(sizeof(char)*(DATA_HEADER_SIZE + MAX_DATA_PAYLOAD));;
+
+
+    if(recvALL(sock_index, raw_data, DATA_HEADER_SIZE + MAX_DATA_PAYLOAD) < 0){
+        remove_data_conn(sock_index);
+        return FALSE;
+    }
+
+    _data = *((struct DATA *)raw_data);
+
     // Forwarding incoming data to next hop here
+    data_packet_update(&_data);
+    next_hop_fd = get_next_hop(_data.dest_ip_addr);
+
+    if(_data.ttl>0){
+        sendALL(next_hop_fd, raw_data, DATA_HEADER_SIZE + MAX_DATA_PAYLOAD);
+    }
+
+    free(raw_data);
     return TRUE;
 }

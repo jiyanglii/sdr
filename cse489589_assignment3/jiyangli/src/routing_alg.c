@@ -172,3 +172,9 @@ void GetPrimaryIP(struct IPV4_ADDR * local_ip) {
         close(sock);
     }
 }
+
+int get_next_hop(uint32_t dest_ip)
+{
+    // Return next hop fd by destination IP
+    return 0;
+}
