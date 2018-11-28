@@ -57,6 +57,17 @@ void router_init(char* init_payload){
     // Get local ip address first
     GetPrimaryIP(&local_ip);
 
+#ifdef DEBUG
+    printf("local_ip->_ip: %u\n", local_ip._ip);
+    printf("local_ip->_ip_str: %s\n", local_ip._ip_str);
+#endif
+
+    // struct sockaddr_in addr;
+    // socklen_t addr_size;
+
+    // addr_size = sizeof(struct sockaddr)
+    // gethostname(sock_index, (struct sockaddr *)&addr, &addr_size);
+
     struct CONTROL_INIT_HEADER header;
     char * ptr = init_payload;
 
@@ -159,4 +170,3 @@ void GetPrimaryIP(struct IPV4_ADDR * local_ip) {
         close(sock);
     }
 }
->>>>>>> origin/DJ
