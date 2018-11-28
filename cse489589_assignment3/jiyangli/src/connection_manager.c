@@ -28,6 +28,7 @@
 #include "../include/global.h"
 #include "../include/control_handler.h"
 #include "../include/data_handler.h"
+#include "../include/routing_alg.h"
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
@@ -159,4 +160,33 @@ void routing_sock_init(uint16_t router_sock_num, uint16_t data_sock_num)
 {
     router_sock_init(router_sock_num);
     data_sock_init(data_sock_num);
+}
+
+void refresh_data_links()
+{
+    // This function refresh all data TCP links with all neibouring routers,
+    // It attampts to establish a new link when the link_status is NOT active
+    int data_socket = -1;
+
+    for(int i=0;i<active_node_num;i++){
+        if((node_table[i].link_status == FALSE) && (node_table[i].self == FALSE)){
+            // Create new data link
+            data_socket = new_data_conn_client(node_table[i].ip._ip, node_table[i].raw_data.router_data_port);
+            if(data_socket < 0){
+                // Link creation failed
+                node_table[i].link_status = FALSE;
+                node_table[i].fd = 0;
+            }
+            else
+            {
+                // On success, update DATA_LINK list and node_info list
+                node_table[i].link_status = TRUE;
+                node_table[i].fd = data_socket;
+                /* Add to watched socket list */
+                FD_SET(data_socket, &master_list);
+                if(data_socket > head_fd) head_fd = data_socket;
+            }
+        }
+        //else do nothing
+    }
 }

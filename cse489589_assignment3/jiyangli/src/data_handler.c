@@ -30,6 +30,7 @@
 
 
 #include "../include/global.h"
+#include "../include/routing_alg.h"
 
 
 /* Linked List for active data connections */
@@ -86,6 +87,47 @@ int new_data_conn(int sock_index)
     LIST_INSERT_HEAD(&data_conn_list, connection, next);
 
     return fdaccept;
+}
+
+int new_data_conn_client(int router_ip, int router_data_port)
+{
+    if(local_port == 0) return -2;
+
+    int fdsocket, len;
+    struct sockaddr_in remote_server_addr;
+
+    fdsocket = socket(AF_INET, SOCK_STREAM, 0);
+    if(fdsocket < 0)
+        perror("Failed to create socket");
+
+    bzero(&remote_server_addr, sizeof(remote_server_addr));
+    remote_server_addr.sin_family = AF_INET;
+    remote_server_addr.sin_port = htons(local_port);
+    remote_server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    if(bind(fdsocket, (struct sockaddr *)&remote_server_addr, (socklen_t)sizeof(remote_server_addr)) < 0 )
+        perror("Bind failed");
+
+    //printf("Client: local port %08d\n", local_port);
+
+    bzero(&remote_server_addr, sizeof(remote_server_addr));
+    remote_server_addr.sin_family = AF_INET;
+    remote_server_addr.sin_addr.s_addr = router_ip;
+    //inet_pton(AF_INET, router_ip, &remote_server_addr.sin_addr); //Convert IP addresses from human-readable to binary
+    remote_server_addr.sin_port = htons(router_data_port);
+
+    if(connect(fdsocket, (struct sockaddr*)&remote_server_addr, sizeof(remote_server_addr)) < 0){
+        close(fdsocket);
+        fdsocket = -1;
+        perror("Connect failed");
+    }
+    else{
+        /* Insert into list of active control connections*/
+        connection = malloc(sizeof(struct DataConn));
+        connection->sockfd = fdsocket;
+        LIST_INSERT_HEAD(&data_conn_list, connection, next);
+    }
+
+    return fdsocket;
 }
 
 bool isData(int sock_index)

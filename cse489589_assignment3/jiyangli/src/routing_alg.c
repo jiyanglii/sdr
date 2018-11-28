@@ -41,13 +41,13 @@
 
 #define DEBUG
 
-#define MAX_NODE_NUM 5
+struct ROUTER_INFO node_table[MAX_NODE_NUM] = {0};
+uint16_t active_node_num = 0;
 
-static struct ROUTER_INFO node_table[MAX_NODE_NUM] = {0};
+uint16_t local_port = 0;
 
 static struct ROUTER_INFO local_node_info = {0};
 
-static uint16_t active_node_num = 0;
 static uint16_t router_update_ttl = 0;
 
 struct IPV4_ADDR local_ip;
@@ -90,6 +90,10 @@ void router_init(char* init_payload){
         } else node_table[i].neighbor = FALSE;
 
 
+        // General initialization
+        node_table[i].link_status = FALSE;
+        node_table[i].fd = -1;
+
 #ifdef DEBUG
     printf("node_table[%d] router_ip: %d\n", i, node_table[i].raw_data.router_ip);
     printf("node_table[%d] router_ip_str: %s\n", i, node_table[i].ip._ip_str);
@@ -101,7 +105,8 @@ void router_init(char* init_payload){
     // Create router port and data port using the info
     routing_sock_init(local_node_info.raw_data.router_router_port, local_node_info.raw_data.router_data_port);
 
-    // Establish tcp connection with all neighbouring routers
+    // Establish/refresh tcp connection with all neighbouring routers
+    refresh_data_links();
 
 }
 

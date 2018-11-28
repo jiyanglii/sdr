@@ -11,3 +11,4 @@ void init();
 void main_loop();
 
 void routing_sock_init(uint16_t router_sock_num, uint16_t data_sock_num);
+void refresh_data_links();

@@ -1,6 +1,9 @@
 #pragma once
+#include "../include/control_header_lib.h"
 
 void router_init(char* init_payload);
+
+#define MAX_NODE_NUM 5
 
 #define PACKET_USING_STRUCT // Comment this out to use alternate packet crafting technique
 
@@ -36,5 +39,18 @@ struct IPV4_ADDR
     char _ip_str[INET_ADDRSTRLEN];
 };
 
+struct ROUTER_INFO
+{
+    struct CONTROL_INIT_ROUTER_INFO raw_data;
+    struct IPV4_ADDR ip;
+    bool self;
+    bool neighbor;
+    bool link_status;
+    int fd;
+};
 
 void GetPrimaryIP(struct IPV4_ADDR * local_ip);
+
+extern struct ROUTER_INFO node_table[MAX_NODE_NUM];
+extern uint16_t active_node_num;
+extern uint16_t local_port;
