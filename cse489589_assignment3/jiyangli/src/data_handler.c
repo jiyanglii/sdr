@@ -30,6 +30,9 @@
 
 
 #include "../include/global.h"
+#include "../include/network_util.h"
+#include "../include/data_handler.h"
+#include "../include/routing_alg.h"
 
 
 /* Linked List for active data connections */
@@ -88,6 +91,47 @@ int new_data_conn(int sock_index)
     return fdaccept;
 }
 
+int new_data_conn_client(int router_ip, int router_data_port)
+{
+    if(local_port == 0) return -2;
+
+    int fdsocket, len;
+    struct sockaddr_in remote_server_addr;
+
+    fdsocket = socket(AF_INET, SOCK_STREAM, 0);
+    if(fdsocket < 0)
+        perror("Failed to create socket");
+
+    bzero(&remote_server_addr, sizeof(remote_server_addr));
+    remote_server_addr.sin_family = AF_INET;
+    remote_server_addr.sin_port = htons(local_port);
+    remote_server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    if(bind(fdsocket, (struct sockaddr *)&remote_server_addr, (socklen_t)sizeof(remote_server_addr)) < 0 )
+        perror("Bind failed");
+
+    //printf("Client: local port %08d\n", local_port);
+
+    bzero(&remote_server_addr, sizeof(remote_server_addr));
+    remote_server_addr.sin_family = AF_INET;
+    remote_server_addr.sin_addr.s_addr = router_ip;
+    //inet_pton(AF_INET, router_ip, &remote_server_addr.sin_addr); //Convert IP addresses from human-readable to binary
+    remote_server_addr.sin_port = htons(router_data_port);
+
+    if(connect(fdsocket, (struct sockaddr*)&remote_server_addr, sizeof(remote_server_addr)) < 0){
+        close(fdsocket);
+        fdsocket = -1;
+        perror("Connect failed");
+    }
+    else{
+        /* Insert into list of active control connections*/
+        connection = malloc(sizeof(struct DataConn));
+        connection->sockfd = fdsocket;
+        LIST_INSERT_HEAD(&data_conn_list, connection, next);
+    }
+
+    return fdsocket;
+}
+
 bool isData(int sock_index)
 {
     LIST_FOREACH(connection, &data_conn_list, next)
@@ -97,8 +141,43 @@ bool isData(int sock_index)
 }
 
 
+void remove_data_conn(int sock_index)
+{
+    LIST_FOREACH(connection, &data_conn_list, next) {
+        if(connection->sockfd == sock_index) LIST_REMOVE(connection, next); // this may be unsafe?
+        free(connection);
+    }
+
+    close(sock_index);
+}
+
+void data_packet_update(struct DATA * _data)
+{
+    _data->ttl--;
+}
+
 bool data_recv_hook(int sock_index)
 {
+    int next_hop_fd = 0;
+    struct DATA _data = {0};
+    char * raw_data = (char *) malloc(sizeof(char)*(DATA_HEADER_SIZE + MAX_DATA_PAYLOAD));;
+
+
+    if(recvALL(sock_index, raw_data, DATA_HEADER_SIZE + MAX_DATA_PAYLOAD) < 0){
+        remove_data_conn(sock_index);
+        return FALSE;
+    }
+
+    _data = *((struct DATA *)raw_data);
+
     // Forwarding incoming data to next hop here
+    data_packet_update(&_data);
+    next_hop_fd = get_next_hop(_data.dest_ip_addr);
+
+    if(_data.ttl>0){
+        sendALL(next_hop_fd, raw_data, DATA_HEADER_SIZE + MAX_DATA_PAYLOAD);
+    }
+
+    free(raw_data);
     return TRUE;
 }

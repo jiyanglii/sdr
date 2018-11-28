@@ -1,7 +1,6 @@
 #pragma once
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include "../include/routing_alg.h"
 
 #define CNTRL_HEADER_SIZE 8
 #define CNTRL_RESP_HEADER_SIZE 8
@@ -39,14 +38,6 @@
         uint16_t router_data_port;
         uint16_t router_cost;
         uint32_t router_ip;
-    };
-
-    struct ROUTER_INFO
-    {
-        struct CONTROL_INIT_ROUTER_INFO raw_data;
-        struct IPV4_ADDR ip;
-        bool self;
-        bool neighbor;
     };
 
     struct __attribute__((__packed__)) CONTROL_ROUTING_TABLE                      //Control code 0x02
