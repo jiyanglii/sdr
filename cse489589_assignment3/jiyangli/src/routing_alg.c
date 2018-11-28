@@ -62,12 +62,6 @@ void router_init(char* init_payload){
     printf("local_ip->_ip_str: %s\n", local_ip._ip_str);
 #endif
 
-    // struct sockaddr_in addr;
-    // socklen_t addr_size;
-
-    // addr_size = sizeof(struct sockaddr)
-    // gethostname(sock_index, (struct sockaddr *)&addr, &addr_size);
-
     struct CONTROL_INIT_HEADER header;
     char * ptr = init_payload;
 
@@ -169,4 +163,38 @@ void GetPrimaryIP(struct IPV4_ADDR * local_ip) {
         local_ip->_ip = name.sin_addr.s_addr;
         close(sock);
     }
+}
+
+void BellmanFord_alg(char * update_packet){
+
+    struct ROUTING_UPDATE_HEADER header;
+    struct ROUTING_UPDATE router_info[MAX_NODE_NUM];
+    char * ptr = update_packet;
+    
+    header = *((struct ROUTING_UPDATE_HEADER *)ptr);
+    ptr += sizeof(struct CONTROL_INIT_HEADER);
+
+    uint16_t update_fields = header.router_num;
+    uint32_t source_ip = header.source_router_ip; 
+
+
+    for(int i=0;i<update_fields;i++){
+        router_info[i] = *((struct ROUTING_UPDATE *)ptr);
+
+    }
+        //node_table[i].raw_data.router_ip = node_table[i].raw_data.router_ip;
+        // inet_ntop(AF_INET, &(node_table[i].raw_data.router_ip), (char *)&(node_table[i].ip._ip_str) , sizeof(node_table[i].ip._ip_str));
+        // node_table[i].ip._ip = node_table[i].raw_data.router_ip;
+        // ptr += sizeof(struct CONTROL_INIT_ROUTER_INFO);
+
+        // if(node_table[i].ip._ip == local_ip._ip)
+        // {
+        //     // This is the self node
+        //     local_node_info = node_table[i];
+        //     node_table[i].self = TRUE;
+        // }else node_table[i].self = FALSE;
+
+        // if(node_table[i].raw_data.router_cost == UINT16_MAX){
+        //     node_table[i].neighbor = TRUE;
+        // } else node_table[i].neighbor = FALSE;
 }
