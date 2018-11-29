@@ -32,15 +32,25 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#ifdef TEST
+#include "../include/test_bench.h"
+#endif
+
+
 fd_set master_list, watch_list;
 int control_socket, router_socket, data_socket;
 int head_fd;
 
 void main_loop()
 {
+    printf("Entering the main_loop()!\n");
     int selret, sock_index, fdaccept;
 
     while(TRUE){
+#ifdef TEST
+    init_top();
+#endif
+
         watch_list = master_list;
         selret = select(head_fd+1, &watch_list, NULL, NULL, NULL);
 
@@ -169,16 +179,18 @@ void refresh_data_links()
     int data_socket = -1;
 
     for(int i=0;i<active_node_num;i++){
-        if((node_table[i].link_status == FALSE) && (node_table[i].self == FALSE)){
+        if((node_table[i].link_status == FALSE) && (node_table[i].self == FALSE) && (node_table[i].neighbor == TRUE)){
             // Create new data link
             data_socket = new_data_conn_client(node_table[i].ip._ip, node_table[i].raw_data.router_data_port);
             if(data_socket < 0){
+                printf("Link creation failed with %s\n", node_table[i].ip._ip_str);
                 // Link creation failed
                 node_table[i].link_status = FALSE;
                 node_table[i].fd = 0;
             }
             else
             {
+                printf("New data link with neigbour is created!\n");
                 // On success, update DATA_LINK list and node_info list
                 node_table[i].link_status = TRUE;
                 node_table[i].fd = data_socket;
