@@ -21,16 +21,21 @@
  * This contains the main function. Add further description here....
  */
 
+#include <stdlib.h>
+#include <stdint.h>
+#include <stdio.h>
 #include <strings.h>
+#include <string.h>
+#include <unistd.h>
 #include <sys/select.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include "../include/connection_manager.h"
 #include "../include/global.h"
 #include "../include/control_handler.h"
 #include "../include/data_handler.h"
 #include "../include/routing_alg.h"
-#include <netinet/in.h>
-#include <arpa/inet.h>
 
 #ifdef TEST
 #include "../include/test_bench.h"
@@ -47,9 +52,6 @@ void main_loop()
     int selret, sock_index, fdaccept;
 
     while(TRUE){
-#ifdef TEST
-    init_top();
-#endif
 
         watch_list = master_list;
         selret = select(head_fd+1, &watch_list, NULL, NULL, NULL);
@@ -71,6 +73,21 @@ void main_loop()
                     if(fdaccept > head_fd) head_fd = fdaccept;
                 }
 
+#ifdef TEST
+
+                else if (sock_index == STDIN){
+                    char *cmd = (char*) malloc(sizeof(char)*CMD_SIZE);
+
+                    memset(cmd, '\0', CMD_SIZE);
+                    if(fgets(cmd, CMD_SIZE-1, stdin) == NULL) //Mind the newline character that will be written to cmd
+                        exit(-1);
+                        printf("\nI got: %s\n String size:%d\n", cmd, (int)strlen(cmd));
+
+                    processCMD(atoi(cmd));
+
+                    free(cmd);
+                }
+#endif
                 /* router_socket */
                 else if(sock_index == router_socket){
                     //call handler that will call recvfrom() .....
@@ -108,6 +125,12 @@ void init()
 
     FD_ZERO(&master_list);
     FD_ZERO(&watch_list);
+
+#ifdef TEST
+    /* Register STDIN */
+    FD_SET(STDIN, &master_list);
+    //init_top();
+#endif
 
     /* Register the control socket */
     FD_SET(control_socket, &master_list);

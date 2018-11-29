@@ -46,3 +46,10 @@ void init_top()
         init_set = TRUE;
     }
 }
+
+void processCMD(int cmd)
+{
+    if(cmd == 0){
+        init_top();
+    }
+}
