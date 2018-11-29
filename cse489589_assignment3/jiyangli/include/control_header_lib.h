@@ -40,6 +40,8 @@
         uint32_t router_ip;
     };
 
+    typedef struct CONTROL_INIT_ROUTER_INFO ROUTER_CONF;
+
     struct __attribute__((__packed__)) CONTROL_ROUTING_TABLE                      //Control code 0x02
     {
         uint16_t router_id;

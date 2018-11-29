@@ -94,28 +94,22 @@ void router_init(char* init_payload){
         node_table[i].ip._ip = node_table[i].raw_data.router_ip;
         ptr += sizeof(struct CONTROL_INIT_ROUTER_INFO);
 
+        node_table[i].next_hop_router_id = UINT16_MAX;
+
         if(node_table[i].ip._ip == local_ip._ip)
         {
             // This is the self node
             local_node_info = node_table[i];
             node_table[i].self = TRUE;
-
-            local_update_header.source_router_port = node_table[i].raw_data.router_router_port;
-            local_update_header.source_router_ip   = node_table[i].raw_data.router_ip;
-            local_update_info[i].router_cost = 0;
-
+            node_table[i].next_hop_router_id = node_table[i].raw_data.router_id;
         }else node_table[i].self = FALSE;
 
-        if(node_table[i].raw_data.router_cost == UINT16_MAX){
-            node_table[i].neighbor = FALSE;
-            local_update_info[i].router_cost = UINT16_MAX;
-        } 
-        else{
+        if(node_table[i].raw_data.router_cost != UINT16_MAX){
             node_table[i].neighbor = TRUE;
-            local_update_info[i].router_cost = node_table[i].raw_data.router_cost;
-        }
+            node_table[i].next_hop_router_id = node_table[i].raw_data.router_id;
+        } else node_table[i].neighbor = FALSE;
 
-
+        node_table[i].cost_to = node_table[i].raw_data.router_cost;
 
         // General initialization
         node_table[i].link_status = FALSE;
@@ -230,6 +224,19 @@ void GetPrimaryIP(struct IPV4_ADDR * local_ip) {
         // } else node_table[i].neighbor = FALSE;
 int get_next_hop(uint32_t dest_ip)
 {
+    uint16_t next_hop_id = -1;
     // Return next hop fd by destination IP
+    for(int i=0;i<active_node_num;i++){
+        if(node_table[i].ip._ip == dest_ip){
+            next_hop_id = node_table[i].next_hop_router_id;
+        }
+    }
+
+    for(int i=0;i<active_node_num;i++){
+        if(node_table[i].raw_data.router_id == next_hop_id){
+            return node_table[i].fd;
+        }
+    }
+
     return 0;
 }

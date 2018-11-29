@@ -115,7 +115,7 @@ void static router_sock_init(uint16_t router_sock_num)
     struct sockaddr_in control_addr;
     socklen_t addrlen = sizeof(control_addr);
 
-    sock = socket(AF_INET, SOCK_STREAM, 0);
+    sock = socket(AF_INET, SOCK_DGRAM, 0);
     if(sock < 0){
         ERROR("socket() failed");
     }

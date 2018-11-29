@@ -47,6 +47,10 @@ struct ROUTER_INFO
     bool neighbor;
     bool link_status;
     int fd;
+
+    // Routing related
+    uint16_t cost_to;
+    uint16_t next_hop_router_id;
 };
 
 void GetPrimaryIP(struct IPV4_ADDR * local_ip);
