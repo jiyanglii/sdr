@@ -104,18 +104,9 @@ int new_data_conn_client(int router_ip, int router_data_port)
 
     bzero(&remote_server_addr, sizeof(remote_server_addr));
     remote_server_addr.sin_family = AF_INET;
-    remote_server_addr.sin_port = htons(local_port);
-    remote_server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    if(bind(fdsocket, (struct sockaddr *)&remote_server_addr, (socklen_t)sizeof(remote_server_addr)) < 0 )
-        perror("Bind failed");
-
-    //printf("Client: local port %08d\n", local_port);
-
-    bzero(&remote_server_addr, sizeof(remote_server_addr));
-    remote_server_addr.sin_family = AF_INET;
     remote_server_addr.sin_addr.s_addr = router_ip;
     //inet_pton(AF_INET, router_ip, &remote_server_addr.sin_addr); //Convert IP addresses from human-readable to binary
-    remote_server_addr.sin_port = htons(router_data_port);
+    remote_server_addr.sin_port = 0;//htons(router_data_port);
 
     if(connect(fdsocket, (struct sockaddr*)&remote_server_addr, sizeof(remote_server_addr)) < 0){
         close(fdsocket);
@@ -160,24 +151,24 @@ bool data_recv_hook(int sock_index)
 {
     int next_hop_fd = 0;
     struct DATA _data = {0};
-    char * raw_data = (char *) malloc(sizeof(char)*(DATA_HEADER_SIZE + MAX_DATA_PAYLOAD));;
+    //char * raw_data = (char *) malloc(sizeof(char)*(DATA_HEADER_SIZE + MAX_DATA_PAYLOAD));;
 
 
-    if(recvALL(sock_index, raw_data, DATA_HEADER_SIZE + MAX_DATA_PAYLOAD) < 0){
+    if(recvALL(sock_index, (char *)&_data, sizeof(struct DATA)) < 0){
         remove_data_conn(sock_index);
         return FALSE;
     }
 
-    _data = *((struct DATA *)raw_data);
+    //_data = *((struct DATA *)raw_data);
 
     // Forwarding incoming data to next hop here
     data_packet_update(&_data);
     next_hop_fd = get_next_hop(_data.dest_ip_addr);
 
     if(_data.ttl>0){
-        sendALL(next_hop_fd, raw_data, DATA_HEADER_SIZE + MAX_DATA_PAYLOAD);
+        sendALL(next_hop_fd, (char *)&_data, sizeof(struct DATA));
     }
 
-    free(raw_data);
+    //free(raw_data);
     return TRUE;
 }
