@@ -168,7 +168,7 @@ void send_update_table()
         payload_len += sizeof(struct ROUTING_UPDATE);
     }
 
-    // send(table_response, payload_len)
+    udp_router_update(table_response, payload_len);
 }
 
 void BellmanFord_alg(char * update_packet){

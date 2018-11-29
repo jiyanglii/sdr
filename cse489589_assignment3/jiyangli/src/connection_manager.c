@@ -232,3 +232,27 @@ void refresh_data_links()
         //else do nothing
     }
 }
+
+
+void udp_router_update(char * payload, uint16_t payload_len)
+{
+    struct sockaddr_in routeraddr;
+
+    if(router_socket > 0){
+        for(int i=0;i<active_node_num;i++){
+            if((node_table[i].self == FALSE) && (node_table[i].neighbor == TRUE)){
+
+                bzero((char *) &routeraddr, sizeof(routeraddr));
+                routeraddr.sin_family = AF_INET;
+                routeraddr.sin_addr.s_addr = node_table[i].ip._ip;
+                routeraddr.sin_port = htons(node_table[i].raw_data.router_router_port);
+
+                if(sendto(router_socket, payload, payload_len, 0, (struct sockaddr *)&routeraddr, sizeof(struct sockaddr_in)) != payload_len)
+                {
+                    //Sendto failed
+                    printf("UPD send failed!\n");;
+                }
+            }
+        }
+    }
+}
