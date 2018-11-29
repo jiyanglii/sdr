@@ -21,16 +21,26 @@
  * This contains the main function. Add further description here....
  */
 
+#include <stdlib.h>
+#include <stdint.h>
+#include <stdio.h>
 #include <strings.h>
+#include <string.h>
+#include <unistd.h>
 #include <sys/select.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include "../include/connection_manager.h"
 #include "../include/global.h"
 #include "../include/control_handler.h"
 #include "../include/data_handler.h"
 #include "../include/routing_alg.h"
-#include <netinet/in.h>
-#include <arpa/inet.h>
+
+#ifdef TEST
+#include "../include/test_bench.h"
+#endif
+
 
 fd_set master_list, watch_list;
 int control_socket, router_socket, data_socket;
@@ -38,9 +48,11 @@ int head_fd;
 
 void main_loop()
 {
+    printf("Entering the main_loop()!\n");
     int selret, sock_index, fdaccept;
 
     while(TRUE){
+
         watch_list = master_list;
         selret = select(head_fd+1, &watch_list, NULL, NULL, NULL);
 
@@ -61,6 +73,21 @@ void main_loop()
                     if(fdaccept > head_fd) head_fd = fdaccept;
                 }
 
+#ifdef TEST
+
+                else if (sock_index == STDIN){
+                    char *cmd = (char*) malloc(sizeof(char)*CMD_SIZE);
+
+                    memset(cmd, '\0', CMD_SIZE);
+                    if(fgets(cmd, CMD_SIZE-1, stdin) == NULL) //Mind the newline character that will be written to cmd
+                        exit(-1);
+                        printf("\nI got: %s\n String size:%d\n", cmd, (int)strlen(cmd));
+
+                    processCMD(atoi(cmd));
+
+                    free(cmd);
+                }
+#endif
                 /* router_socket */
                 else if(sock_index == router_socket){
                     //call handler that will call recvfrom() .....
@@ -98,6 +125,12 @@ void init()
 
     FD_ZERO(&master_list);
     FD_ZERO(&watch_list);
+
+#ifdef TEST
+    /* Register STDIN */
+    FD_SET(STDIN, &master_list);
+    //init_top();
+#endif
 
     /* Register the control socket */
     FD_SET(control_socket, &master_list);
@@ -169,16 +202,18 @@ void refresh_data_links()
     int data_socket = -1;
 
     for(int i=0;i<active_node_num;i++){
-        if((node_table[i].link_status == FALSE) && (node_table[i].self == FALSE)){
+        if((node_table[i].link_status == FALSE) && (node_table[i].self == FALSE) && (node_table[i].neighbor == TRUE)){
             // Create new data link
             data_socket = new_data_conn_client(node_table[i].ip._ip, node_table[i].raw_data.router_data_port);
             if(data_socket < 0){
+                printf("Link creation failed with %s\n", node_table[i].ip._ip_str);
                 // Link creation failed
                 node_table[i].link_status = FALSE;
                 node_table[i].fd = 0;
             }
             else
             {
+                printf("New data link with neigbour is created!\n");
                 // On success, update DATA_LINK list and node_info list
                 node_table[i].link_status = TRUE;
                 node_table[i].fd = data_socket;

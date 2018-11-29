@@ -24,7 +24,6 @@
 #include "../include/global.h"
 #include "../include/connection_manager.h"
 
-#define TEST
 
 /**
  * main function
@@ -33,7 +32,7 @@
  * @param  argv The argument list
  * @return 0 EXIT_SUCCESS
  */
-#ifndef TEST
+
 int main(int argc, char **argv)
 {
     /*Start Here*/
@@ -43,34 +42,3 @@ int main(int argc, char **argv)
 
     return 0;
 }
-#endif
-
-#ifdef TEST
-#include "../include/routing_alg.h"
-
-int main(int argc, char **argv)
-{
-    /*Start Here*/
-
-    short test_init_payload[] = {   0x0005, 0x0002,
-                                    0x0001, 3452,
-                                    2344,   0002,
-                                    0x80cd,   0x2422,
-                                    0x0002, 4562,
-                                    2345,   0002,
-                                    0x80cd,   0x242e,
-                                    0x0003, 8356,
-                                    1635,   0002,
-                                    0x80cd,   0x2421,
-                                    0x0004, 4573,
-                                    1678,   0002,
-                                    0x80cd,   0x2423,
-                                    0x0005, 3456,
-                                    1946,   0002,
-                                    0x80cd,   0x2424,
-                                };
-    router_init((char *)&test_init_payload);
-
-    return 0;
-}
-#endif

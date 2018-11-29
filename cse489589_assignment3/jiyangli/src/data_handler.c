@@ -80,13 +80,20 @@ int new_data_conn(int sock_index)
 
     caddr_len = sizeof(remote_controller_addr);
     fdaccept = accept(sock_index, (struct sockaddr *)&remote_controller_addr, (socklen_t *)&caddr_len);
-    if(fdaccept < 0)
+    if(fdaccept < 0){
         ERROR("accept() failed");
+    }
+    else{
+        new_data_link(remote_controller_addr.sin_addr.s_addr, fdaccept);
 
-    /* Insert into list of active control connections*/
-    connection = malloc(sizeof(struct DataConn));
-    connection->sockfd = fdaccept;
-    LIST_INSERT_HEAD(&data_conn_list, connection, next);
+
+        /* Insert into list of active control connections*/
+        connection = malloc(sizeof(struct DataConn));
+        connection->sockfd = fdaccept;
+        LIST_INSERT_HEAD(&data_conn_list, connection, next);
+    }
+
+
 
     return fdaccept;
 }
@@ -106,7 +113,7 @@ int new_data_conn_client(int router_ip, int router_data_port)
     remote_server_addr.sin_family = AF_INET;
     remote_server_addr.sin_addr.s_addr = router_ip;
     //inet_pton(AF_INET, router_ip, &remote_server_addr.sin_addr); //Convert IP addresses from human-readable to binary
-    remote_server_addr.sin_port = 0;//htons(router_data_port);
+    remote_server_addr.sin_port = htons(router_data_port);
 
     if(connect(fdsocket, (struct sockaddr*)&remote_server_addr, sizeof(remote_server_addr)) < 0){
         close(fdsocket);

@@ -46,7 +46,9 @@ struct ROUTER_INFO
     bool self;
     bool neighbor;
     bool link_status;
-    int fd;
+    int fd;             // This is the FD when self is Client, I connect() others
+    bool link_status_s;
+    int fd_s;           // This is the FD when self is Server, others connect() me
 
     // Routing related
     uint16_t cost_to;
@@ -55,6 +57,7 @@ struct ROUTER_INFO
 
 void GetPrimaryIP(struct IPV4_ADDR * local_ip);
 int get_next_hop(uint32_t dest_ip);
+uint8_t new_data_link(uint32_t ip, int fd);
 
 extern struct ROUTER_INFO node_table[MAX_NODE_NUM];
 extern uint16_t active_node_num;

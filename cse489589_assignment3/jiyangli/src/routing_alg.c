@@ -39,6 +39,10 @@
 #include "../include/control_handler.h"
 #include "../include/data_handler.h"
 
+#ifdef TEST
+#include "../include/test_bench.h"
+#endif
+
 #define DEBUG
 
 struct ROUTER_INFO node_table[MAX_NODE_NUM] = {0};
@@ -105,12 +109,14 @@ void router_init(char* init_payload){
         // General initialization
         node_table[i].link_status = FALSE;
         node_table[i].fd = -1;
+        node_table[i].link_status_s = FALSE;
+        node_table[i].fd_s = -1;
 
         // uint16_t update_table_len;
         // update_table_len = sizeof()
 
 #ifdef DEBUG
-    printf("node_table[%d] router_ip: %d\n", i, node_table[i].raw_data.router_ip);
+    printf("node_table[%d] router_ip: %d\n", i, node_table[i].ip._ip);
     printf("node_table[%d] router_ip_str: %s\n", i, node_table[i].ip._ip_str);
     printf("node_table[%d] router_router_port: %d\n", i, node_table[i].raw_data.router_router_port);
 #endif
@@ -169,7 +175,7 @@ void BellmanFord_alg(char * update_packet){
     ptr += sizeof(struct CONTROL_INIT_HEADER);
 
     uint16_t update_fields = header.router_num;
-    uint32_t source_ip = header.source_router_ip; 
+    uint32_t source_ip = header.source_router_ip;
 
     for(int i=0;i<update_fields;i++){
         router_info[i] = *((struct ROUTING_UPDATE *)ptr);
@@ -249,4 +255,19 @@ int get_next_hop(uint32_t dest_ip)
     }
 
     return 0;
+}
+
+uint8_t new_data_link(uint32_t ip, int fd){
+    for(int i=0;i<active_node_num;i++){
+        if(node_table[i].ip._ip == ip){
+            if(node_table[i].fd_s < 0)
+            {
+                node_table[i].fd_s = fd;
+                node_table[i].link_status_s = TRUE;
+                return TRUE;
+            }
+        }
+    }
+
+    return FALSE;
 }
