@@ -156,13 +156,6 @@ void send_update_table()
         local_update_info.router_id   = node_table[i].raw_data.router_id;
         local_update_info.router_cost = node_table[i].cost_to;
 
-        if(node_table[i].ip._ip == local_ip._ip)
-        {
-            // This is the self node
-            local_update_header.source_router_port = node_table[i].raw_data.router_router_port;
-            local_update_header.source_router_ip   = node_table[i].raw_data.router_ip;
-        }
-
         memcpy(table_response, (char *)&local_update_info, sizeof(struct ROUTING_UPDATE));
         table_response += sizeof(struct ROUTING_UPDATE);
         payload_len += sizeof(struct ROUTING_UPDATE);
@@ -176,6 +169,10 @@ void BellmanFord_alg(char * update_packet){
     struct ROUTING_UPDATE_HEADER header;
     struct ROUTING_UPDATE router_info[MAX_NODE_NUM];
     char * ptr = update_packet;
+    int    base_cost;
+    int    temp;
+    int    source_id;
+
 
     header = *((struct ROUTING_UPDATE_HEADER *)ptr);
     ptr += sizeof(struct CONTROL_INIT_HEADER);
@@ -185,8 +182,42 @@ void BellmanFord_alg(char * update_packet){
 
     for(int i=0;i<update_fields;i++){
         router_info[i] = *((struct ROUTING_UPDATE *)ptr);
-
+        ptr += sizeof(struct ROUTING_UPDATE);
     }
+
+    for(int i=0;i<MAX_NODE_NUM;i++){
+        if (node_table[i].raw_data.router_ip == source_ip)
+        {
+            base_cost = node_table[i].cost_to;
+            source_id = node_table[i].raw_data.router_id;
+        }      
+    }
+
+    // update routing table of node_table
+    for (int i = 0; i < MAX_NODE_NUM; ++i)
+    {
+        if ((node_table[i].self == FALSE)&&(source_id != node_table[i].raw_data.router_id))
+        {
+            for (int j = 0; j < update_fields; ++j)
+            {
+                if (router_info[j].router_ip == node_table[i].raw_data.router_ip)
+                {
+                    temp = base_cost + router_info[j].router_cost;
+                    if (temp < node_table[i].cost_to)
+                    {
+                        node_table[i].cost_to = temp;
+                        node_table[i].next_hop_router_id = source_id;
+                    }
+                }   
+
+            
+            }   
+               
+        }
+        
+            
+    }
+
 }
 
 void router_update(char* update_payload){
