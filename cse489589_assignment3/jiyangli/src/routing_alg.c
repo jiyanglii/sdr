@@ -49,8 +49,11 @@ uint16_t local_port = 0;
 static struct ROUTER_INFO local_node_info = {0};
 
 static struct ROUTING_UPDATE local_update_info[MAX_NODE_NUM] = {0};
+static struct ROUTING_UPDATE_HEADER local_update_header = {0};
 
 static uint16_t router_update_ttl = 0;
+
+static struct CONTROL_ROUTING_TABLE routing_table[MAX_NODE_NUM] = {0};
 
 struct IPV4_ADDR local_ip;
 
@@ -77,6 +80,7 @@ void router_init(char* init_payload){
     printf("active_node_num: %hu\n", active_node_num);
     printf("router_update_ttl: %hu\n", router_update_ttl);
 #endif
+    local_update_header.router_num = MAX_NODE_NUM;
 
     for(int i=0;i<active_node_num;i++){
         node_table[i].raw_data = *((struct CONTROL_INIT_ROUTER_INFO *)ptr);
@@ -95,18 +99,30 @@ void router_init(char* init_payload){
             // This is the self node
             local_node_info = node_table[i];
             node_table[i].self = TRUE;
+
+            local_update_header.source_router_port = node_table[i].raw_data.router_router_port;
+            local_update_header.source_router_ip   = node_table[i].raw_data.router_ip;
             local_update_info[i].router_cost = 0;
+
         }else node_table[i].self = FALSE;
 
         if(node_table[i].raw_data.router_cost == UINT16_MAX){
+            node_table[i].neighbor = FALSE;
+            local_update_info[i].router_cost = UINT16_MAX;
+        } 
+        else{
             node_table[i].neighbor = TRUE;
             local_update_info[i].router_cost = node_table[i].raw_data.router_cost;
-        } else node_table[i].neighbor = FALSE;
+        }
+
 
 
         // General initialization
         node_table[i].link_status = FALSE;
         node_table[i].fd = -1;
+
+        // uint16_t update_table_len;
+        // update_table_len = sizeof()
 
 #ifdef DEBUG
     printf("node_table[%d] router_ip: %d\n", i, node_table[i].raw_data.router_ip);
@@ -122,6 +138,24 @@ void router_init(char* init_payload){
     // Establish/refresh tcp connection with all neighbouring routers
     refresh_data_links();
 
+}
+
+void BellmanFord_alg(char * update_packet){
+
+    struct ROUTING_UPDATE_HEADER header;
+    struct ROUTING_UPDATE router_info[MAX_NODE_NUM];
+    char * ptr = update_packet;
+
+    header = *((struct ROUTING_UPDATE_HEADER *)ptr);
+    ptr += sizeof(struct CONTROL_INIT_HEADER);
+
+    uint16_t update_fields = header.router_num;
+    uint32_t source_ip = header.source_router_ip; 
+
+    for(int i=0;i<update_fields;i++){
+        router_info[i] = *((struct ROUTING_UPDATE *)ptr);
+
+    }
 }
 
 void router_update(char* update_payload){
@@ -179,24 +213,6 @@ void GetPrimaryIP(struct IPV4_ADDR * local_ip) {
     }
 }
 
-void BellmanFord_alg(char * update_packet){
-
-    struct ROUTING_UPDATE_HEADER header;
-    struct ROUTING_UPDATE router_info[MAX_NODE_NUM];
-    char * ptr = update_packet;
-    
-    header = *((struct ROUTING_UPDATE_HEADER *)ptr);
-    ptr += sizeof(struct CONTROL_INIT_HEADER);
-
-    uint16_t update_fields = header.router_num;
-    uint32_t source_ip = header.source_router_ip; 
-
-
-    for(int i=0;i<update_fields;i++){
-        router_info[i] = *((struct ROUTING_UPDATE *)ptr);
-
-    }
-}
         //node_table[i].raw_data.router_ip = node_table[i].raw_data.router_ip;
         // inet_ntop(AF_INET, &(node_table[i].raw_data.router_ip), (char *)&(node_table[i].ip._ip_str) , sizeof(node_table[i].ip._ip_str));
         // node_table[i].ip._ip = node_table[i].raw_data.router_ip;
