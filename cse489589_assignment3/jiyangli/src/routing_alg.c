@@ -48,9 +48,6 @@ uint16_t local_port = 0;
 
 static struct ROUTER_INFO local_node_info = {0};
 
-static struct ROUTING_UPDATE local_update_info[MAX_NODE_NUM] = {0};
-static struct ROUTING_UPDATE_HEADER local_update_header = {0};
-
 static uint16_t router_update_ttl = 0;
 
 static struct CONTROL_ROUTING_TABLE routing_table[MAX_NODE_NUM] = {0};
@@ -80,15 +77,9 @@ void router_init(char* init_payload){
     printf("active_node_num: %hu\n", active_node_num);
     printf("router_update_ttl: %hu\n", router_update_ttl);
 #endif
-    local_update_header.router_num = MAX_NODE_NUM;
 
     for(int i=0;i<active_node_num;i++){
         node_table[i].raw_data = *((struct CONTROL_INIT_ROUTER_INFO *)ptr);
-
-        local_update_info[i].router_ip   = node_table[i].raw_data.router_ip;
-        local_update_info[i].router_port = node_table[i].raw_data.router_router_port;
-        local_update_info[i].router_id   = node_table[i].raw_data.router_id;
-
         //node_table[i].raw_data.router_ip = node_table[i].raw_data.router_ip;
         inet_ntop(AF_INET, &(node_table[i].raw_data.router_ip), (char *)&(node_table[i].ip._ip_str) , sizeof(node_table[i].ip._ip_str));
         node_table[i].ip._ip = node_table[i].raw_data.router_ip;
@@ -132,6 +123,40 @@ void router_init(char* init_payload){
     // Establish/refresh tcp connection with all neighbouring routers
     refresh_data_links();
 
+}
+
+void create_update_table(){
+
+    struct   ROUTING_UPDATE local_update_info[MAX_NODE_NUM] = {0};
+    struct   ROUTING_UPDATE_HEADER local_update_header = {0};
+    uint16_t table_len;
+    char     *table_response;
+
+    table_len = sizeof(struct ROUTING_UPDATE_HEADER) + 5*sizeof(struct ROUTING_UPDATE);
+
+    table_response = (char *) malloc(table_len);
+
+
+    local_update_header.router_num = active_node_num;
+
+
+    for(int i=0;i<active_node_num;i++){
+
+        local_update_info[i].router_ip   = node_table[i].raw_data.router_ip;
+        local_update_info[i].router_port = node_table[i].raw_data.router_router_port;
+        local_update_info[i].router_id   = node_table[i].raw_data.router_id;
+        local_update_info[i].router_cost = node_table[i].cost_to;
+
+        if(node_table[i].ip._ip == local_ip._ip)
+        {
+            // This is the self node
+            local_update_header.source_router_port = node_table[i].raw_data.router_router_port;
+            local_update_header.source_router_ip   = node_table[i].raw_data.router_ip;
+        }
+    }
+        memcpy(table_response, (char *)&local_update_header, sizeof(struct ROUTING_UPDATE_HEADER));
+        table_response += table_len - sizeof(struct ROUTING_UPDATE_HEADER);
+        memcpy(table_response, (char *)&local_update_info, table_len);
 }
 
 void BellmanFord_alg(char * update_packet){
