@@ -1,4 +1,5 @@
 #pragma once
+#include <sys/time.h>
 #include "../include/control_header_lib.h"
 
 void router_init(char* init_payload);
@@ -53,6 +54,12 @@ struct ROUTER_INFO
     // Routing related
     uint16_t cost_to;
     uint16_t next_hop_router_id;
+};
+
+struct ROUTER_UPDATE_TIMER
+{
+    uint16_t router_id;
+    struct timeval time;
 };
 
 void GetPrimaryIP(struct IPV4_ADDR * local_ip);

@@ -30,6 +30,7 @@
 #include <sys/select.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/time.h>
 
 #include "../include/connection_manager.h"
 #include "../include/global.h"
@@ -46,6 +47,8 @@ fd_set master_list, watch_list;
 int control_socket, router_socket, data_socket;
 int head_fd;
 
+struct timeval timer = {1,0};
+
 void main_loop()
 {
     printf("Entering the main_loop()!\n");
@@ -54,10 +57,14 @@ void main_loop()
     while(TRUE){
 
         watch_list = master_list;
-        selret = select(head_fd+1, &watch_list, NULL, NULL, NULL);
+        selret = select(head_fd+1, &watch_list, NULL, NULL, &timer);
 
-        if(selret < 0)
+        if(selret < 0){
             ERROR("select failed.");
+        }
+        else if(selret == 0){
+            printf("Select() timeout!!\n");
+        }
 
         /* Loop through file descriptors to check which ones are ready */
         for(sock_index=0; sock_index<=head_fd; sock_index+=1){

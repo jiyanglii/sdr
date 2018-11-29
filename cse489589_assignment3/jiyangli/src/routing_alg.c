@@ -131,27 +131,30 @@ void router_init(char* init_payload){
 
 }
 
-void create_update_table(){
-
-    struct   ROUTING_UPDATE local_update_info[MAX_NODE_NUM] = {0};
+void send_update_table()
+{
+    struct   ROUTING_UPDATE local_update_info = {0};
     struct   ROUTING_UPDATE_HEADER local_update_header = {0};
-    uint16_t table_len;
-    char     *table_response;
-
-    table_len = sizeof(struct ROUTING_UPDATE_HEADER) + 5*sizeof(struct ROUTING_UPDATE);
-
-    table_response = (char *) malloc(table_len);
+    uint16_t payload_len = 0;;
+    char     *table_response = (char *) malloc(sizeof(struct ROUTING_UPDATE_HEADER) + MAX_NODE_NUM*sizeof(struct ROUTING_UPDATE));
 
 
     local_update_header.router_num = active_node_num;
+    local_update_header.source_router_port = local_node_info.raw_data.router_router_port;
+    local_update_header.source_router_ip   = local_node_info.ip._ip;
+
+    memcpy(table_response, (char *)&local_update_header, sizeof(struct ROUTING_UPDATE_HEADER));
+    table_response += sizeof(struct ROUTING_UPDATE_HEADER);
+    payload_len += sizeof(struct ROUTING_UPDATE_HEADER);
 
 
-    for(int i=0;i<active_node_num;i++){
+    for(int i=0;i<active_node_num;i++)
+    {
 
-        local_update_info[i].router_ip   = node_table[i].raw_data.router_ip;
-        local_update_info[i].router_port = node_table[i].raw_data.router_router_port;
-        local_update_info[i].router_id   = node_table[i].raw_data.router_id;
-        local_update_info[i].router_cost = node_table[i].cost_to;
+        local_update_info.router_ip   = node_table[i].raw_data.router_ip;
+        local_update_info.router_port = node_table[i].raw_data.router_router_port;
+        local_update_info.router_id   = node_table[i].raw_data.router_id;
+        local_update_info.router_cost = node_table[i].cost_to;
 
         if(node_table[i].ip._ip == local_ip._ip)
         {
@@ -159,10 +162,13 @@ void create_update_table(){
             local_update_header.source_router_port = node_table[i].raw_data.router_router_port;
             local_update_header.source_router_ip   = node_table[i].raw_data.router_ip;
         }
+
+        memcpy(table_response, (char *)&local_update_info, sizeof(struct ROUTING_UPDATE));
+        table_response += sizeof(struct ROUTING_UPDATE);
+        payload_len += sizeof(struct ROUTING_UPDATE);
     }
-        memcpy(table_response, (char *)&local_update_header, sizeof(struct ROUTING_UPDATE_HEADER));
-        table_response += table_len - sizeof(struct ROUTING_UPDATE_HEADER);
-        memcpy(table_response, (char *)&local_update_info, table_len);
+
+    // send(table_response, payload_len)
 }
 
 void BellmanFord_alg(char * update_packet){
