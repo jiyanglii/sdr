@@ -207,21 +207,6 @@ void GetPrimaryIP(struct IPV4_ADDR * local_ip) {
     }
 }
 
-        //node_table[i].raw_data.router_ip = node_table[i].raw_data.router_ip;
-        // inet_ntop(AF_INET, &(node_table[i].raw_data.router_ip), (char *)&(node_table[i].ip._ip_str) , sizeof(node_table[i].ip._ip_str));
-        // node_table[i].ip._ip = node_table[i].raw_data.router_ip;
-        // ptr += sizeof(struct CONTROL_INIT_ROUTER_INFO);
-
-        // if(node_table[i].ip._ip == local_ip._ip)
-        // {
-        //     // This is the self node
-        //     local_node_info = node_table[i];
-        //     node_table[i].self = TRUE;
-        // }else node_table[i].self = FALSE;
-
-        // if(node_table[i].raw_data.router_cost == UINT16_MAX){
-        //     node_table[i].neighbor = TRUE;
-        // } else node_table[i].neighbor = FALSE;
 int get_next_hop(uint32_t dest_ip)
 {
     uint16_t next_hop_id = -1;
