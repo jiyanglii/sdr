@@ -50,13 +50,13 @@ uint16_t active_node_num = 0;
 
 uint16_t local_port = 0;
 
-static struct ROUTER_INFO local_node_info = {0};
+static struct ROUTER_INFO * local_node_info;
 
-static uint16_t router_update_ttl = 0;
+uint16_t router_update_ttl = 0;
 
 static struct CONTROL_ROUTING_TABLE routing_table[MAX_NODE_NUM] = {0};
 
-struct IPV4_ADDR local_ip;
+struct IPV4_ADDR local_ip = {0};
 
 void router_init(char* init_payload){
 
@@ -94,7 +94,7 @@ void router_init(char* init_payload){
         if(node_table[i].ip._ip == local_ip._ip)
         {
             // This is the self node
-            local_node_info = node_table[i];
+            local_node_info = &node_table[i];
             node_table[i].self = TRUE;
             node_table[i].next_hop_router_id = node_table[i].raw_data.router_id;
         }else node_table[i].self = FALSE;
@@ -124,7 +124,7 @@ void router_init(char* init_payload){
     }
 
     // Create router port and data port using the info
-    routing_sock_init(local_node_info.raw_data.router_router_port, local_node_info.raw_data.router_data_port);
+    routing_sock_init(local_node_info->raw_data.router_router_port, local_node_info->raw_data.router_data_port);
 
     // Establish/refresh tcp connection with all neighbouring routers
     refresh_data_links();
@@ -136,12 +136,12 @@ void send_update_table()
     struct   ROUTING_UPDATE local_update_info = {0};
     struct   ROUTING_UPDATE_HEADER local_update_header = {0};
     uint16_t payload_len = 0;;
-    char     *table_response = (char *) malloc(sizeof(struct ROUTING_UPDATE_HEADER) + MAX_NODE_NUM*sizeof(struct ROUTING_UPDATE));
+    char     *table_response = (char *) malloc(MAX_ROUTING_UPDATE_PAYLOAD_SIZE);
 
 
     local_update_header.router_num = active_node_num;
-    local_update_header.source_router_port = local_node_info.raw_data.router_router_port;
-    local_update_header.source_router_ip   = local_node_info.ip._ip;
+    local_update_header.source_router_port = local_node_info->raw_data.router_router_port;
+    local_update_header.source_router_ip   = local_node_info->ip._ip;
 
     memcpy(table_response, (char *)&local_update_header, sizeof(struct ROUTING_UPDATE_HEADER));
     table_response += sizeof(struct ROUTING_UPDATE_HEADER);
@@ -239,11 +239,11 @@ void routing_table_response(int sock_index){
     struct CONTROL_ROUTING_TABLE cntrl_routing_table[MAX_NODE_NUM];
 
     payload_len = sizeof(cntrl_routing_table);
-    char * cntrl_response_payload = (char *) malloc(payload_len);
+    char * cntrl_response_payload = (char *) calloc(payload_len, sizeof(uint8_t));
     cntrl_response_header = create_response_header(sock_index, 0, 0, payload_len);
 
     response_len = CNTRL_RESP_HEADER_SIZE+payload_len;
-    cntrl_response = (char *) malloc(response_len);
+    cntrl_response = (char *) calloc(response_len, sizeof(uint8_t));
 
 }
 

@@ -88,7 +88,7 @@ int new_data_conn(int sock_index)
 
 
         /* Insert into list of active control connections*/
-        connection = malloc(sizeof(struct DataConn));
+        connection = calloc(1, sizeof(struct DataConn));
         connection->sockfd = fdaccept;
         LIST_INSERT_HEAD(&data_conn_list, connection, next);
     }
@@ -122,7 +122,7 @@ int new_data_conn_client(int router_ip, int router_data_port)
     }
     else{
         /* Insert into list of active control connections*/
-        connection = malloc(sizeof(struct DataConn));
+        connection = calloc(1, sizeof(struct DataConn));
         connection->sockfd = fdsocket;
         LIST_INSERT_HEAD(&data_conn_list, connection, next);
     }

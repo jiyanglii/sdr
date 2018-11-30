@@ -89,7 +89,7 @@ int new_control_conn(int sock_index)
         ERROR("accept() failed");
 
     /* Insert into list of active control connections */
-    connection = malloc(sizeof(struct ControlConn));
+    connection = calloc(1, sizeof(struct ControlConn));
     connection->sockfd = fdaccept;
     LIST_INSERT_HEAD(&control_conn_list, connection, next);
 
@@ -121,7 +121,7 @@ bool control_recv_hook(int sock_index)
     uint16_t payload_len;
 
     /* Get control header */
-    cntrl_header = (char *) malloc(sizeof(char)*CNTRL_HEADER_SIZE);
+    cntrl_header = (char *) calloc(CNTRL_HEADER_SIZE, sizeof(char));
     bzero(cntrl_header, CNTRL_HEADER_SIZE);
 
     if(recvALL(sock_index, cntrl_header, CNTRL_HEADER_SIZE) < 0){
@@ -146,8 +146,7 @@ bool control_recv_hook(int sock_index)
 
     /* Get control payload */
     if(payload_len != 0){
-        cntrl_payload = (char *) malloc(sizeof(char)*payload_len);
-        bzero(cntrl_payload, payload_len);
+        cntrl_payload = (char *) calloc(payload_len, sizeof(char));
 
         if(recvALL(sock_index, cntrl_payload, payload_len) < 0){
             remove_control_conn(sock_index);

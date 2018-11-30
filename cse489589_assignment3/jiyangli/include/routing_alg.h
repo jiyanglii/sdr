@@ -40,6 +40,13 @@ struct IPV4_ADDR
     char _ip_str[INET_ADDRSTRLEN];
 };
 
+struct ROUTER_UPDATE_TIMER
+{
+    struct timeval time_last; // the time that recieved the last update
+    struct timeval time;
+    struct timeval time_next; // The expected time for the next update
+};
+
 struct ROUTER_INFO
 {
     struct CONTROL_INIT_ROUTER_INFO raw_data;
@@ -54,18 +61,18 @@ struct ROUTER_INFO
     // Routing related
     uint16_t cost_to;
     uint16_t next_hop_router_id;
+
+    struct ROUTER_UPDATE_TIMER _timer;
 };
 
-struct ROUTER_UPDATE_TIMER
-{
-    uint16_t router_id;
-    struct timeval time;
-};
+#define MAX_ROUTING_UPDATE_PAYLOAD_SIZE (sizeof(struct ROUTING_UPDATE_HEADER) + MAX_NODE_NUM*sizeof(struct ROUTING_UPDATE))
 
 void GetPrimaryIP(struct IPV4_ADDR * local_ip);
 int get_next_hop(uint32_t dest_ip);
 uint8_t new_data_link(uint32_t ip, int fd);
+void BellmanFord_alg(char * update_packet);
 
 extern struct ROUTER_INFO node_table[MAX_NODE_NUM];
 extern uint16_t active_node_num;
 extern uint16_t local_port;
+extern uint16_t router_update_ttl;

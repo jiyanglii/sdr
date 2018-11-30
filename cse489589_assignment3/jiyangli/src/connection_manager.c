@@ -57,6 +57,8 @@ void main_loop()
     while(TRUE){
 
         watch_list = master_list;
+
+        timer_handler();
         selret = select(head_fd+1, &watch_list, NULL, NULL, &timer);
 
         if(selret < 0){
@@ -83,9 +85,8 @@ void main_loop()
 #ifdef TEST
 
                 else if (sock_index == STDIN){
-                    char *cmd = (char*) malloc(sizeof(char)*CMD_SIZE);
+                    char *cmd = (char*) calloc(CMD_SIZE, sizeof(char));
 
-                    memset(cmd, '\0', CMD_SIZE);
                     if(fgets(cmd, CMD_SIZE-1, stdin) == NULL) //Mind the newline character that will be written to cmd
                         exit(-1);
                         printf("\nI got: %s\n String size:%d\n", cmd, (int)strlen(cmd));
@@ -98,6 +99,7 @@ void main_loop()
                 /* router_socket */
                 else if(sock_index == router_socket){
                     //call handler that will call recvfrom() .....
+                    udp_router_update_recv(sock_index);
                 }
 
                 /* data_socket */
@@ -256,3 +258,41 @@ void udp_router_update(char * payload, uint16_t payload_len)
         }
     }
 }
+
+void udp_router_update_recv(int udp_fd){
+    struct sockaddr_in routeraddr;
+    char payload[MAX_ROUTING_UPDATE_PAYLOAD_SIZE] = {0};
+    uint16_t payload_len = MAX_ROUTING_UPDATE_PAYLOAD_SIZE;
+
+    char * payload_ptr = &payload[0];
+
+    if(sendto(udp_fd, payload_ptr, payload_len, 0, (struct sockaddr *)&routeraddr, sizeof(struct sockaddr_in)) != payload_len)
+    {
+        //Sendto failed
+        printf("UPD send failed!\n");;
+    }
+    else{
+        // Update local routing table
+        BellmanFord_alg(payload_ptr);
+
+        // Handle the timer
+        for(int i=0;i<active_node_num;i++){
+            if(routeraddr.sin_addr.s_addr == node_table[i].ip._ip){
+
+                gettimeofday(&(node_table[i]._timer.time_last), NULL);
+
+                node_table[i]._timer.time_next.tv_sec = node_table[i]._timer.time_last.tv_sec + router_update_ttl;
+                node_table[i]._timer.time_next.tv_usec = node_table[i]._timer.time_last.tv_usec;
+            }
+        }
+    }
+
+}
+
+void timer_handler()
+{
+    ;
+}
+
+
+
