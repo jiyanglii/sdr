@@ -6,9 +6,9 @@ SRC_FILES = $(wildcard $(SRC_DIR)/*.c)
 OBJ_FILES = $(SRC_FILES:.c=.o)
 OBJ_PATH  = $(patsubst $(SRC_DIR)/%,$(OBJ_DIR)/%,$(OBJ_FILES))
 
-LIBS	= 
-CC	= gcc
-CFLAGS	= -g -I$(INC_DIR)
+LIBS	=
+CC	= clang
+CFLAGS	= -g -I$(INC_DIR) -Wpedantic -Werror -Wshadow -Wstrict-overflow -fno-strict-aliasing -Wno-missing-field-initializers -O2 -march=native
 
 all: assignment3
 

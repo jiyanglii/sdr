@@ -190,7 +190,7 @@ void BellmanFord_alg(char * update_packet){
         {
             base_cost = node_table[i].cost_to;
             source_id = node_table[i].raw_data.router_id;
-        }      
+        }
     }
 
     // update routing table of node_table
@@ -208,14 +208,14 @@ void BellmanFord_alg(char * update_packet){
                         node_table[i].cost_to = temp;
                         node_table[i].next_hop_router_id = source_id;
                     }
-                }   
+                }
 
-            
-            }   
-               
+
+            }
+
         }
-        
-            
+
+
     }
 
 }
@@ -248,7 +248,7 @@ void routing_table_response(int sock_index){
 }
 
 
-void GetPrimaryIP(struct IPV4_ADDR * local_ip) {
+void GetPrimaryIP(struct IPV4_ADDR * _local_ip) {
     int sock = socket(AF_INET, SOCK_DGRAM, 0);
     if(sock <0) {
       perror("Can not create socket!");
@@ -269,8 +269,8 @@ void GetPrimaryIP(struct IPV4_ADDR * local_ip) {
         if(getsockname(sock, (struct sockaddr *) &name, &namelen) <0)
             perror("can not get host name");
 
-        inet_ntop(AF_INET, (const void *)&name.sin_addr, local_ip->_ip_str, INET_ADDRSTRLEN);
-        local_ip->_ip = name.sin_addr.s_addr;
+        inet_ntop(AF_INET, (const void *)&name.sin_addr, _local_ip->_ip_str, INET_ADDRSTRLEN);
+        _local_ip->_ip = name.sin_addr.s_addr;
         close(sock);
     }
 }

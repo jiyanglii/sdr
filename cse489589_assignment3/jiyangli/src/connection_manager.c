@@ -206,13 +206,13 @@ void refresh_data_links()
 {
     // This function refresh all data TCP links with all neibouring routers,
     // It attampts to establish a new link when the link_status is NOT active
-    int data_socket = -1;
+    int _data_socket = -1;
 
     for(int i=0;i<active_node_num;i++){
         if((node_table[i].link_status == FALSE) && (node_table[i].self == FALSE) && (node_table[i].neighbor == TRUE)){
             // Create new data link
-            data_socket = new_data_conn_client(node_table[i].ip._ip, node_table[i].raw_data.router_data_port);
-            if(data_socket < 0){
+            _data_socket = new_data_conn_client(node_table[i].ip._ip, node_table[i].raw_data.router_data_port);
+            if(_data_socket < 0){
                 printf("Link creation failed with %s\n", node_table[i].ip._ip_str);
                 // Link creation failed
                 node_table[i].link_status = FALSE;
@@ -223,10 +223,10 @@ void refresh_data_links()
                 printf("New data link with neigbour is created!\n");
                 // On success, update DATA_LINK list and node_info list
                 node_table[i].link_status = TRUE;
-                node_table[i].fd = data_socket;
+                node_table[i].fd = _data_socket;
                 /* Add to watched socket list */
-                FD_SET(data_socket, &master_list);
-                if(data_socket > head_fd) head_fd = data_socket;
+                FD_SET(_data_socket, &master_list);
+                if(_data_socket > head_fd) head_fd = _data_socket;
             }
         }
         //else do nothing
