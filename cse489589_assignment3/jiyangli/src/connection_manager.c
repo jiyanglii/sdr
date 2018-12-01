@@ -47,7 +47,7 @@ fd_set master_list, watch_list;
 int control_socket, router_socket, data_socket;
 int head_fd;
 
-struct timeval timer = {1,0};
+static struct timeval timer = {INT16_MAX,0};
 
 void main_loop()
 {
@@ -66,6 +66,7 @@ void main_loop()
         }
         else if(selret == 0){
             printf("Select() timeout!!\n");
+            timer_timeout_handler();
         }
 
         /* Loop through file descriptors to check which ones are ready */
@@ -261,12 +262,13 @@ void udp_router_update(char * payload, uint16_t payload_len)
 
 void udp_router_update_recv(int udp_fd){
     struct sockaddr_in routeraddr;
+    socklen_t sendsize = sizeof(routeraddr);
     char payload[MAX_ROUTING_UPDATE_PAYLOAD_SIZE] = {0};
     uint16_t payload_len = MAX_ROUTING_UPDATE_PAYLOAD_SIZE;
 
     char * payload_ptr = &payload[0];
 
-    if(sendto(udp_fd, payload_ptr, payload_len, 0, (struct sockaddr *)&routeraddr, sizeof(struct sockaddr_in)) != payload_len)
+    if(recvfrom(udp_fd, payload_ptr, payload_len, 0, (struct sockaddr *)&routeraddr, &sendsize) != payload_len)
     {
         //Sendto failed
         printf("UPD send failed!\n");;
@@ -279,10 +281,13 @@ void udp_router_update_recv(int udp_fd){
         for(int i=0;i<active_node_num;i++){
             if(routeraddr.sin_addr.s_addr == node_table[i].ip._ip){
 
-                gettimeofday(&(node_table[i]._timer.time_last), NULL);
+                gettimeofday(&(node_table[i]._timer.time_last), NULL);                                          // Save the current time
 
-                node_table[i]._timer.time_next.tv_sec = node_table[i]._timer.time_last.tv_sec + router_update_ttl;
-                node_table[i]._timer.time_next.tv_usec = node_table[i]._timer.time_last.tv_usec;
+                timeradd(&node_table[i]._timer.time_last, &router_update_ttl, &node_table[i]._timer.time_next); // Calculates the expected next update arrival time
+
+                node_table[i]._timer.time_outs = 0;
+                node_table[i]._timer.timer_pending = FALSE;
+
             }
         }
     }
@@ -291,8 +296,93 @@ void udp_router_update_recv(int udp_fd){
 
 void timer_handler()
 {
-    ;
+    uint16_t next_sched_router_id = -1;
+    struct timeval time_now = {0};
+    struct timeval next_sched = {0};
+
+    struct timeval diff = {0};
+
+    timerclear(&diff);
+    timerclear(&time_now);
+    timerclear(&next_sched);
+
+    gettimeofday(&time_now, NULL);
+
+    for(int i=0;i<active_node_num;i++){
+
+        node_table[i]._timer.timer_pending = FALSE;
+
+        if((node_table[i].neighbor == TRUE) && timerisset(&node_table[i]._timer.time_next)){
+            // Find the closest sched time to the current time
+
+            if(timercmp(&time_now, &node_table[i]._timer.time_next, <) &&
+                timercmp(&next_sched, &node_table[i]._timer.time_next, >))
+            {
+                next_sched = node_table[i]._timer.time_next;
+                next_sched_router_id = node_table[i].raw_data.router_id;
+            }
+            else if(timercmp(&time_now, &node_table[i]._timer.time_next, >)) // Current time is greater then the sched time: this node is timed out
+            {
+                timersub(&time_now, &node_table[i]._timer.time_next, &diff);// Find the time difference from now to the sched time
+                if((diff.tv_sec > MAX_TIMEOUT_CT*router_update_ttl.tv_sec) && (node_table[i]._timer.time_outs >= MAX_TIMEOUT_CT)){
+                    // Missed three consecutive updates from the node
+                    timerclear(&node_table[i]._timer.time_next);
+                    timerclear(&node_table[i]._timer.time_last);
+
+                    // Consider this node is down, set the cost to INF
+                    node_table[i].cost_to = UINT16_MAX;
+                }
+            }
+            else if(timercmp(&time_now, &node_table[i]._timer.time_next, <) &&     //
+                    !timerisset(&next_sched)){
+                next_sched = node_table[i]._timer.time_next;
+                next_sched_router_id = node_table[i].raw_data.router_id;
+            }
+
+        }
+
+    }
+
+    // Flag pending timer
+    for(int i=0;i<active_node_num;i++){
+        if(node_table[i].raw_data.router_id == next_sched_router_id){
+            node_table[i]._timer.timer_pending = TRUE;
+        }
+    }
+
+    if(timerisset(&next_sched)){                    // Next scheduled time if found
+        timersub(&next_sched, &time_now, &timer);   // Find the time between now to next_sched to be the timer
+        printf("Exiting the timer handler with new timer in %ld sec\n", next_sched.tv_sec);
+    }
+    else {
+        timerclear(&next_sched);
+        timerclear(&timer);
+        timer.tv_sec = INT16_MAX;
+        printf("Exiting the timer handler without new timer!!\n");
+        // When no schedule is found, MAX the timeout to block select() until next fd is set
+        // Do not set timeout to ZERO, Zreo timeout would overrun the mainloop()
+    }
 }
+
+void timer_timeout_handler()
+{
+    for(int i=0;i<active_node_num;i++){
+        if(node_table[i]._timer.timer_pending == TRUE){
+            node_table[i]._timer.time_outs++;
+            node_table[i]._timer.timer_pending = FALSE;
+        }
+
+        if(node_table[i]._timer.time_outs >= MAX_TIMEOUT_CT){
+            timerclear(&node_table[i]._timer.time_next);
+            timerclear(&node_table[i]._timer.time_last);
+            node_table[i]._timer.time_outs = 0;
+
+            // Consider this node is down, set the cost to INF
+            node_table[i].cost_to = UINT16_MAX;
+        }
+    }
+}
+
 
 
 

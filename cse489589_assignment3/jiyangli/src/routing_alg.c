@@ -31,6 +31,7 @@
 #include <limits.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/time.h>
 
 #include "../include/global.h"
 #include "../include/routing_alg.h"
@@ -54,7 +55,7 @@ uint16_t local_port = 0;
 
 static struct ROUTER_INFO * local_node_info;
 
-uint16_t router_update_ttl = 0;
+struct timeval router_update_ttl = {0};
 
 // static struct CONTROL_ROUTING_TABLE routing_table[MAX_NODE_NUM] = {0};
 
@@ -64,6 +65,7 @@ void router_init(char* init_payload){
 
     // Get local ip address first
     GetPrimaryIP(&local_ip);
+    timerclear(&router_update_ttl);
 
 #ifdef DEBUG
     printf("local_ip->_ip: %u\n", local_ip._ip);
@@ -77,11 +79,11 @@ void router_init(char* init_payload){
     ptr += sizeof(struct CONTROL_INIT_HEADER);
 
     active_node_num = header.router_num;
-    router_update_ttl = header.ttl;
+    router_update_ttl.tv_sec = header.ttl;
 
 #ifdef DEBUG
     printf("active_node_num: %hu\n", active_node_num);
-    printf("router_update_ttl: %hu\n", router_update_ttl);
+    printf("router_update_ttl: %ld\n", router_update_ttl.tv_sec);
 #endif
 
     for(int i=0;i<active_node_num;i++){

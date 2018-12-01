@@ -3,6 +3,8 @@
 #define DATA_HEADER_SIZE    12 // including the padding
 #define MAX_DATA_PAYLOAD    1024
 
+#define DATA_FIN_FLAG_MASK  0x10000000
+
 struct __attribute__((__packed__)) DATA
 {
     uint32_t dest_ip_addr;
