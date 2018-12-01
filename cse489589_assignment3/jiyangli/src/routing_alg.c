@@ -255,7 +255,7 @@ void routing_table_response(int sock_index){
 
     payload_len = MAX_NODE_NUM * sizeof(struct CONTROL_ROUTING_TABLE);
     char * cntrl_response_payload = (char *) calloc(payload_len, sizeof(uint8_t));
-    cntrl_response_header = create_response_header(sock_index, 0, 0, payload_len);
+    cntrl_response_header = create_response_header(sock_index, 0x02, 0, payload_len);
 
     response_len = CNTRL_RESP_HEADER_SIZE+payload_len;
 

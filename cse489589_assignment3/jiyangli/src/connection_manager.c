@@ -37,6 +37,7 @@
 #include "../include/control_handler.h"
 #include "../include/data_handler.h"
 #include "../include/routing_alg.h"
+#include "../include/network_util.h"
 
 #ifdef TEST
 #include "../include/test_bench.h"
@@ -59,6 +60,7 @@ void main_loop()
         watch_list = master_list;
 
         timer_handler();
+
         selret = select(head_fd+1, &watch_list, NULL, NULL, &timer);
 
         if(selret < 0){
@@ -324,7 +326,7 @@ void timer_handler()
             else if(timercmp(&time_now, &node_table[i]._timer.time_next, >)) // Current time is greater then the sched time: this node is timed out
             {
                 timersub(&time_now, &node_table[i]._timer.time_next, &diff);// Find the time difference from now to the sched time
-                if((diff.tv_sec > MAX_TIMEOUT_CT*router_update_ttl.tv_sec) && (node_table[i]._timer.time_outs >= MAX_TIMEOUT_CT)){
+                if((diff.tv_sec > (MAX_TIMEOUT_CT-1)*router_update_ttl.tv_sec) && (node_table[i]._timer.time_outs >= MAX_TIMEOUT_CT)){
                     // Missed three consecutive updates from the node
                     timerclear(&node_table[i]._timer.time_next);
                     timerclear(&node_table[i]._timer.time_last);
@@ -383,6 +385,16 @@ void timer_timeout_handler()
     }
 }
 
+void crash(int sock_index){
+    // Stop broadcasting routing table to neighbors
+
+    // Send response message to controller
+    char *cntrl_response_header;
+
+    cntrl_response_header = create_response_header(sock_index, 0x04, 0, 0);
+    sendALL(sock_index, cntrl_response_header, CNTRL_RESP_HEADER_SIZE);
+
+}
 
 
 
