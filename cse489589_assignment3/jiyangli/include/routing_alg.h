@@ -42,6 +42,7 @@ struct IPV4_ADDR
 
 struct ROUTER_UPDATE_TIMER
 {
+    bool timer_pending;
     uint8_t time_outs;          // Number of timed out
     struct timeval time_last;   // the time that recieved the last update
     struct timeval time_next;   // The expected time for the next update
