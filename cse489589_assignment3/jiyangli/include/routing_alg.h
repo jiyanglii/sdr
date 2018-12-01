@@ -42,9 +42,9 @@ struct IPV4_ADDR
 
 struct ROUTER_UPDATE_TIMER
 {
-    struct timeval time_last; // the time that recieved the last update
-    struct timeval time;
-    struct timeval time_next; // The expected time for the next update
+    uint8_t time_outs;          // Number of timed out
+    struct timeval time_last;   // the time that recieved the last update
+    struct timeval time_next;   // The expected time for the next update
 };
 
 struct ROUTER_INFO
@@ -75,4 +75,4 @@ void BellmanFord_alg(char * update_packet);
 extern struct ROUTER_INFO node_table[MAX_NODE_NUM];
 extern uint16_t active_node_num;
 extern uint16_t local_port;
-extern uint16_t router_update_ttl;
+extern struct timeval router_update_ttl;

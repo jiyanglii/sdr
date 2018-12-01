@@ -3,6 +3,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#define MAX_TIMEOUT_CT    3
+
 fd_set master_list, watch_list;
 
 int control_socket, router_socket, data_socket;
