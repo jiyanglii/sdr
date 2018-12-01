@@ -38,6 +38,8 @@
 #include "../include/connection_manager.h"
 #include "../include/control_handler.h"
 #include "../include/data_handler.h"
+#include "../include/network_util.h"
+
 
 #ifdef TEST
 #include "../include/test_bench.h"
@@ -54,7 +56,7 @@ static struct ROUTER_INFO * local_node_info;
 
 uint16_t router_update_ttl = 0;
 
-static struct CONTROL_ROUTING_TABLE routing_table[MAX_NODE_NUM] = {0};
+// static struct CONTROL_ROUTING_TABLE routing_table[MAX_NODE_NUM] = {0};
 
 struct IPV4_ADDR local_ip = {0};
 
@@ -227,23 +229,44 @@ void router_update(char* update_payload){
 
     cntrl_update = *((struct CONTROL_UPDATE *)ptr);
 
-    uint16_t router_update_id = cntrl_update.router_id;
-    uint16_t router_update_cost = cntrl_update.router_cost;
-
+    for (int i = 0; i < MAX_NODE_NUM; ++i)
+    {
+        if (node_table[i].raw_data.router_id == cntrl_update.router_id)
+        {
+            node_table[i].cost_to = cntrl_update.router_cost;
+        }
+    }
 }
 
 void routing_table_response(int sock_index){
 
     uint16_t payload_len, response_len;
     char *cntrl_response_header, *cntrl_response;
-    struct CONTROL_ROUTING_TABLE cntrl_routing_table[MAX_NODE_NUM];
+    struct CONTROL_ROUTING_TABLE cntrl_routing_table[MAX_NODE_NUM] = {0};
 
-    payload_len = sizeof(cntrl_routing_table);
+    for (int i = 0; i < MAX_NODE_NUM; ++i)
+    {
+        cntrl_routing_table[i].router_id   = node_table[i].raw_data.router_id;
+        cntrl_routing_table[i].next_hop_id = node_table[i].next_hop_router_id;
+        cntrl_routing_table[i].router_cost = node_table[i].cost_to;
+    }
+
+    payload_len = MAX_NODE_NUM * sizeof(struct CONTROL_ROUTING_TABLE);
     char * cntrl_response_payload = (char *) calloc(payload_len, sizeof(uint8_t));
     cntrl_response_header = create_response_header(sock_index, 0, 0, payload_len);
 
     response_len = CNTRL_RESP_HEADER_SIZE+payload_len;
+
     cntrl_response = (char *) calloc(response_len, sizeof(uint8_t));
+    memcpy(cntrl_response, cntrl_response_header, CNTRL_RESP_HEADER_SIZE);
+    free(cntrl_response_header);
+
+    memcpy(cntrl_response+CNTRL_RESP_HEADER_SIZE, (char *) cntrl_routing_table, payload_len);
+    free(cntrl_routing_table);
+
+    sendALL(sock_index, cntrl_response, response_len);
+
+    free(cntrl_response);
 
 }
 
