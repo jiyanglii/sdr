@@ -255,3 +255,26 @@ void routing_table_response(int sock_index){
     free(cntrl_response);
 
 }
+
+void send_file(int payload_len, char *cntrl_payload){
+
+    struct CONTROL_SENDFILE header;
+    char *ptr = cntrl_payload;
+
+    header = *((struct CONTROL_SENDFILE *)ptr);
+
+
+    // router gets the message and send file in data plane
+
+
+}
+// if fin==1 send response
+void send_file_resp(sock_index){
+
+    char *cntrl_response_header;
+
+    cntrl_response_header = create_response_header(sock_index, 0x05, 0, CNTRL_RESP_HEADER_SIZE);
+    sendALL(sock_index, cntrl_response_header, CNTRL_RESP_HEADER_SIZE);
+}
+
+
