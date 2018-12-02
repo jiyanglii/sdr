@@ -240,39 +240,6 @@ void router_update(char* update_payload){
     }
 }
 
-void routing_table_response(int sock_index){
-
-    uint16_t payload_len, response_len;
-    char *cntrl_response_header, *cntrl_response;
-    struct CONTROL_ROUTING_TABLE cntrl_routing_table[MAX_NODE_NUM] = {0};
-
-    for (int i = 0; i < MAX_NODE_NUM; ++i)
-    {
-        cntrl_routing_table[i].router_id   = node_table[i].raw_data.router_id;
-        cntrl_routing_table[i].next_hop_id = node_table[i].next_hop_router_id;
-        cntrl_routing_table[i].router_cost = node_table[i].cost_to;
-    }
-
-    payload_len = MAX_NODE_NUM * sizeof(struct CONTROL_ROUTING_TABLE);
-    char * cntrl_response_payload = (char *) calloc(payload_len, sizeof(uint8_t));
-    cntrl_response_header = create_response_header(sock_index, 0x02, 0, payload_len);
-
-    response_len = CNTRL_RESP_HEADER_SIZE+payload_len;
-
-    cntrl_response = (char *) calloc(response_len, sizeof(uint8_t));
-    memcpy(cntrl_response, cntrl_response_header, CNTRL_RESP_HEADER_SIZE);
-    free(cntrl_response_header);
-
-    memcpy(cntrl_response+CNTRL_RESP_HEADER_SIZE, (char *) cntrl_routing_table, payload_len);
-    free(cntrl_routing_table);
-
-    sendALL(sock_index, cntrl_response, response_len);
-
-    free(cntrl_response);
-
-}
-
-
 void GetPrimaryIP(struct IPV4_ADDR * _local_ip) {
     int sock = socket(AF_INET, SOCK_DGRAM, 0);
     if(sock <0) {
