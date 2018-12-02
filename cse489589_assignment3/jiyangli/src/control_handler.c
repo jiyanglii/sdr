@@ -326,3 +326,7 @@ void update_response(int sock_index, uint8_t _control_code){
     sendALL(sock_index, cntrl_response_header, CNTRL_RESP_HEADER_SIZE);
     free(cntrl_response_header);
 }
+
+// void file_stats_response(){
+    
+// }
