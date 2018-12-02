@@ -34,6 +34,7 @@
 #include "../include/author.h"
 #include "../include/routing_alg.h"
 #include "../include/data_handler.h"
+#include "../include/control_handler.h"
 #include "../include/network_util.h"
 
 #define CNTRL_CONTROL_CODE_OFFSET 0x04
@@ -183,7 +184,7 @@ bool control_recv_hook(int sock_index)
         case 0x05:
             // SENDFILE
             send_file(payload_len, cntrl_payload);
-            //send_file_resp(sock_index);
+            send_file_resp(sock_index);
             break;
 
         case 0x06:
@@ -258,20 +259,9 @@ void routing_table_response(int sock_index){
 
 }
 
-void send_file(int payload_len, char *cntrl_payload){
 
-    struct CONTROL_SENDFILE header;
-    char *ptr = cntrl_payload;
-
-    header = *((struct CONTROL_SENDFILE *)ptr);
-
-
-    // router gets the message and send file in data plane
-
-
-}
 // if fin==1 send response
-void send_file_resp(sock_index){
+void send_file_resp(int sock_index){
 
     char *cntrl_response_header;
 
