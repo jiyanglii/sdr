@@ -34,6 +34,12 @@
 #include "../include/data_handler.h"
 #include "../include/routing_alg.h"
 
+/*
+data_hist[0]  --->   LAST_DATA_PACKET
+data_hist[1]  --->   SECOND_LAST_DATA_PACKET
+*/
+struct DATA data_hist[2] = {0};
+
 
 /* Linked List for active data connections */
 struct DataConn
@@ -166,6 +172,8 @@ bool data_recv_hook(int sock_index)
         return FALSE;
     }
 
+    update_data_record(&_data);
+
     //_data = *((struct DATA *)raw_data);
 
     // Forwarding incoming data to next hop here
@@ -174,6 +182,7 @@ bool data_recv_hook(int sock_index)
 
     if(_data.ttl>0){
         sendALL(next_hop_fd, (char *)&_data, sizeof(struct DATA));
+        update_data_record(&_data);
     }
 
     //free(raw_data);
@@ -221,12 +230,14 @@ void send_file(uint16_t payload_len, char * cntrl_payload)
             {
                 // _data_packet_to_send is not EOF
                 sendALL(next_hop_fd, (char *)&_data_packet_to_send, sizeof(struct DATA));
+                update_data_record(&_data_packet_to_send);
                 memset(file_data_payload, '\0', MAX_DATA_PAYLOAD);
                 _data_packet.seq_num++;
             }
             else{
                 _data_packet.padding = DATA_FIN_FLAG_MASK;
                 sendALL(next_hop_fd, (char *)&_data_packet_to_send, sizeof(struct DATA));
+                update_data_record(&_data_packet_to_send);
                 memset(file_data_payload, '\0', MAX_DATA_PAYLOAD);
                 break;
             }
@@ -238,6 +249,12 @@ void send_file(uint16_t payload_len, char * cntrl_payload)
 
     fclose(fp);
     free(file_name);
+}
+
+void update_data_record(struct DATA * _data)
+{
+    data_hist[1] = data_hist[0];
+    data_hist[0] = *_data;
 }
 
 
