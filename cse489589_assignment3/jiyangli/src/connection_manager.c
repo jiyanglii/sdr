@@ -396,8 +396,16 @@ void timer_timeout_handler()
     }
 }
 
+void crash(int sock_index){
+    // Stop broadcasting routing table to neighbors
 
+    // Send response message to controller
+    char *cntrl_response_header;
 
+    cntrl_response_header = create_response_header(sock_index, 0x04, 0, 0);
+    sendALL(sock_index, cntrl_response_header, CNTRL_RESP_HEADER_SIZE);
+
+}
 
 
 

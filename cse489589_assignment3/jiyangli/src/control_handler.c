@@ -34,7 +34,6 @@
 #include "../include/author.h"
 #include "../include/routing_alg.h"
 #include "../include/data_handler.h"
-#include "../include/network_util.h"
 
 #define CNTRL_CONTROL_CODE_OFFSET 0x04
 #define CNTRL_PAYLOAD_LEN_OFFSET 0x06
@@ -212,71 +211,3 @@ bool control_recv_hook(int sock_index)
     if(payload_len != 0) free(cntrl_payload);
     return TRUE;
 }
-
-
-void crash(int sock_index){
-    // Stop broadcasting routing table to neighbors
-
-    // Send response message to controller
-    char *cntrl_response_header;
-
-    cntrl_response_header = create_response_header(sock_index, 0x04, 0, 0);
-    sendALL(sock_index, cntrl_response_header, CNTRL_RESP_HEADER_SIZE);
-
-}
-
-
-void routing_table_response(int sock_index){
-
-    uint16_t payload_len, response_len;
-    char *cntrl_response_header, *cntrl_response;
-    struct CONTROL_ROUTING_TABLE cntrl_routing_table[MAX_NODE_NUM] = {0};
-
-    for (int i = 0; i < MAX_NODE_NUM; ++i)
-    {
-        cntrl_routing_table[i].router_id   = node_table[i].raw_data.router_id;
-        cntrl_routing_table[i].next_hop_id = node_table[i].next_hop_router_id;
-        cntrl_routing_table[i].router_cost = node_table[i].cost_to;
-    }
-
-    payload_len = MAX_NODE_NUM * sizeof(struct CONTROL_ROUTING_TABLE);
-    char * cntrl_response_payload = (char *) calloc(payload_len, sizeof(uint8_t));
-    cntrl_response_header = create_response_header(sock_index, 0x02, 0, payload_len);
-
-    response_len = CNTRL_RESP_HEADER_SIZE+payload_len;
-
-    cntrl_response = (char *) calloc(response_len, sizeof(uint8_t));
-    memcpy(cntrl_response, cntrl_response_header, CNTRL_RESP_HEADER_SIZE);
-    free(cntrl_response_header);
-
-    memcpy(cntrl_response+CNTRL_RESP_HEADER_SIZE, (char *) cntrl_routing_table, payload_len);
-    free(cntrl_routing_table);
-
-    sendALL(sock_index, cntrl_response, response_len);
-
-    free(cntrl_response);
-
-}
-
-void send_file(int payload_len, char *cntrl_payload){
-
-    struct CONTROL_SENDFILE header;
-    char *ptr = cntrl_payload;
-
-    header = *((struct CONTROL_SENDFILE *)ptr);
-
-
-    // router gets the message and send file in data plane
-
-
-}
-// if fin==1 send response
-void send_file_resp(sock_index){
-
-    char *cntrl_response_header;
-
-    cntrl_response_header = create_response_header(sock_index, 0x05, 0, CNTRL_RESP_HEADER_SIZE);
-    sendALL(sock_index, cntrl_response_header, CNTRL_RESP_HEADER_SIZE);
-}
-
-
