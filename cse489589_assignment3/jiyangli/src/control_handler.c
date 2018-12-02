@@ -164,6 +164,7 @@ bool control_recv_hook(int sock_index)
         case 0x01:
             // INIT
             router_init(cntrl_payload);
+            init_response(sock_index);
             break;
 
 
@@ -307,3 +308,11 @@ void send_prev_data(int sock_index, uint8_t _control_code)
     free(cntrl_response_header);
 }
 
+void init_response(int sock_index){
+
+    char *cntrl_response_header;
+
+    cntrl_response_header = create_response_header(sock_index, 0x01, 0, CNTRL_RESP_HEADER_SIZE);
+    sendALL(sock_index, cntrl_response_header, CNTRL_RESP_HEADER_SIZE);
+    free(cntrl_response_header);
+}
