@@ -100,6 +100,10 @@ void router_init(char* init_payload){
             local_node_info = &node_table[i];
             node_table[i].self = TRUE;
             node_table[i].next_hop_router_id = node_table[i].raw_data.router_id;
+
+            // Start the self update timer
+            gettimeofday(&node_table[i]._timer.time_last, NULL);
+            timeradd(&node_table[i]._timer.time_last, &router_update_ttl, &node_table[i]._timer.time_next);
         }else node_table[i].self = FALSE;
 
         if(node_table[i].raw_data.router_cost != UINT16_MAX){
