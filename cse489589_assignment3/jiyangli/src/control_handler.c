@@ -277,7 +277,7 @@ void send_file_resp(int sock_index, uint8_t _control_code){
 
     char *cntrl_response_header;
 
-    cntrl_response_header = create_response_header(sock_index, _control_code, 0, CNTRL_RESP_HEADER_SIZE);
+    cntrl_response_header = create_response_header(sock_index, _control_code, 0, 0);
     sendALL(sock_index, cntrl_response_header, CNTRL_RESP_HEADER_SIZE);
     free(cntrl_response_header);
 }
@@ -313,7 +313,7 @@ void init_response(int sock_index, uint8_t _control_code){
 
     char *cntrl_response_header;
 
-    cntrl_response_header = create_response_header(sock_index, _control_code, 0, CNTRL_RESP_HEADER_SIZE);
+    cntrl_response_header = create_response_header(sock_index, _control_code, 0, 0);
     sendALL(sock_index, cntrl_response_header, CNTRL_RESP_HEADER_SIZE);
     free(cntrl_response_header);
 }
@@ -322,11 +322,11 @@ void update_response(int sock_index, uint8_t _control_code){
 
     char *cntrl_response_header;
 
-    cntrl_response_header = create_response_header(sock_index, _control_code, 0, CNTRL_RESP_HEADER_SIZE);
+    cntrl_response_header = create_response_header(sock_index, _control_code, 0, 0);
     sendALL(sock_index, cntrl_response_header, CNTRL_RESP_HEADER_SIZE);
     free(cntrl_response_header);
 }
 
 // void file_stats_response(){
-    
+
 // }
