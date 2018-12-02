@@ -179,3 +179,66 @@ bool data_recv_hook(int sock_index)
     //free(raw_data);
     return TRUE;
 }
+
+void send_file(uint16_t payload_len, char * cntrl_payload)
+{
+    int next_hop_fd = 0;
+    struct CONTROL_SENDFILE header = {0};
+    struct DATA _data_packet = {0};
+    struct DATA _data_packet_to_send = {0}; // A delayed version to detect EOF
+
+    char * file_name_ptr = cntrl_payload + sizeof(struct CONTROL_SENDFILE);
+    uint16_t file_name_len = payload_len - sizeof(struct CONTROL_SENDFILE);
+    char * file_name = (char *)calloc(file_name_len, sizeof(char));
+    char * file_data_payload = &_data_packet.payload[0];
+
+    header = *((struct CONTROL_SENDFILE *)&cntrl_payload);
+
+    memcpy(&file_name, file_name_ptr, file_name_len);
+
+    // Proccess header information
+    next_hop_fd = get_next_hop(header.dest_ip_addr);
+    _data_packet.dest_ip_addr = header.dest_ip_addr;
+    _data_packet.transfer_id = header.transfer_id;
+    _data_packet.ttl = header.init_ttl;
+    _data_packet.seq_num = header.init_seq;
+    _data_packet.padding = 0;
+
+    printf("The name of the file to send is: %s\n", file_name);
+
+    FILE *fp;
+    size_t read_s = 0;
+    fp = fopen(file_name, "r");
+
+    if (fp) {
+        printf("File opened\n");
+        read_s = fread(file_data_payload, 1, MAX_DATA_PAYLOAD, fp);
+
+        while (read_s > 0){
+            _data_packet_to_send = _data_packet;
+            read_s = fread(file_data_payload, 1, MAX_DATA_PAYLOAD, fp);
+            if(read_s > 0)
+            {
+                // _data_packet_to_send is not EOF
+                sendALL(next_hop_fd, (char *)&_data_packet_to_send, sizeof(struct DATA));
+                memset(file_data_payload, '\0', MAX_DATA_PAYLOAD);
+                _data_packet.seq_num++;
+            }
+            else{
+                _data_packet.padding = DATA_FIN_FLAG_MASK;
+                sendALL(next_hop_fd, (char *)&_data_packet_to_send, sizeof(struct DATA));
+                memset(file_data_payload, '\0', MAX_DATA_PAYLOAD);
+                break;
+            }
+            usleep(1500);
+        }
+    }
+
+
+
+    fclose(fp);
+    free(file_name);
+}
+
+
+

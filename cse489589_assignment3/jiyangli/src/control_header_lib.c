@@ -36,15 +36,15 @@
 char* create_response_header(int sock_index, uint8_t control_code, uint8_t response_code, uint16_t payload_len)
 {
     char *buffer;
-    #ifdef PACKET_USING_STRUCT
-        /** ASSERT(sizeof(struct CONTROL_RESPONSE_HEADER) == 8)
-          * This is not really necessary with the __packed__ directive supplied during declaration (see control_header_lib.h).
-          * If this fails, comment #define PACKET_USING_STRUCT in control_header_lib.h
-          */
-        BUILD_BUG_ON(sizeof(struct CONTROL_RESPONSE_HEADER) != CNTRL_RESP_HEADER_SIZE); // This will FAIL during compilation itself; See comment above.
 
-        struct CONTROL_RESPONSE_HEADER *cntrl_resp_header;
-    #endif
+    /** ASSERT(sizeof(struct CONTROL_RESPONSE_HEADER) == 8)
+      * This is not really necessary with the __packed__ directive supplied during declaration (see control_header_lib.h).
+      * If this fails, comment #define PACKET_USING_STRUCT in control_header_lib.h
+    */
+    BUILD_BUG_ON(sizeof(struct CONTROL_RESPONSE_HEADER) != CNTRL_RESP_HEADER_SIZE); // This will FAIL during compilation itself; See comment above.
+
+    struct CONTROL_RESPONSE_HEADER *cntrl_resp_header;
+
 
     struct sockaddr_in addr;
     socklen_t addr_size;
@@ -57,16 +57,14 @@ char* create_response_header(int sock_index, uint8_t control_code, uint8_t respo
     addr_size = sizeof(struct sockaddr_in);
     getpeername(sock_index, (struct sockaddr *)&addr, &addr_size);
 
-    #ifdef PACKET_USING_STRUCT
-        /* Controller IP Address */
-        memcpy(&(cntrl_resp_header->controller_ip_addr), &(addr.sin_addr), sizeof(struct in_addr));
-        /* Control Code */
-        cntrl_resp_header->control_code = control_code;
-        /* Response Code */
-        cntrl_resp_header->response_code = response_code;
-        /* Payload Length */
-        cntrl_resp_header->payload_len = htons(payload_len);
-    #endif
+    /* Controller IP Address */
+    memcpy(&(cntrl_resp_header->controller_ip_addr), &(addr.sin_addr), sizeof(struct in_addr));
+    /* Control Code */
+    cntrl_resp_header->control_code = control_code;
+    /* Response Code */
+    cntrl_resp_header->response_code = response_code;
+    /* Payload Length */
+    cntrl_resp_header->payload_len = htons(payload_len);
 
 
     return buffer;

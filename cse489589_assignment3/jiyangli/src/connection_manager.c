@@ -314,7 +314,7 @@ void timer_handler()
 
         node_table[i]._timer.timer_pending = FALSE;
 
-        if((node_table[i].neighbor == TRUE) && timerisset(&node_table[i]._timer.time_next)){
+        if(((node_table[i].neighbor == TRUE) || (node_table[i].self == TRUE)) && timerisset(&node_table[i]._timer.time_next)){
             // Find the closest sched time to the current time
 
             if(timercmp(&time_now, &node_table[i]._timer.time_next, <) &&
@@ -368,13 +368,24 @@ void timer_handler()
 
 void timer_timeout_handler()
 {
+    struct timeval time_now = {0};
+    timerclear(&time_now);
+    gettimeofday(&time_now, NULL);
+
     for(int i=0;i<active_node_num;i++){
-        if(node_table[i]._timer.timer_pending == TRUE){
+        if((node_table[i]._timer.timer_pending == TRUE) && (node_table[i].self == TRUE)){
+            send_update_table();
+
+            timeradd(&time_now, &router_update_ttl, &node_table[i]._timer.time_next);
+            node_table[i]._timer.time_last = time_now;
+            node_table[i]._timer.timer_pending = FALSE;
+        }
+        else if(node_table[i]._timer.timer_pending == TRUE){
             node_table[i]._timer.time_outs++;
             node_table[i]._timer.timer_pending = FALSE;
         }
 
-        if(node_table[i]._timer.time_outs >= MAX_TIMEOUT_CT){
+        if((node_table[i]._timer.time_outs >= MAX_TIMEOUT_CT) && (node_table[i].self != TRUE)){
             timerclear(&node_table[i]._timer.time_next);
             timerclear(&node_table[i]._timer.time_last);
             node_table[i]._timer.time_outs = 0;

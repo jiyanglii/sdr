@@ -72,6 +72,7 @@ void GetPrimaryIP(struct IPV4_ADDR * local_ip);
 int get_next_hop(uint32_t dest_ip);
 uint8_t new_data_link(uint32_t ip, int fd);
 void BellmanFord_alg(char * update_packet);
+void send_update_table();
 
 extern struct ROUTER_INFO node_table[MAX_NODE_NUM];
 extern uint16_t active_node_num;

@@ -56,12 +56,12 @@
         uint16_t router_cost;
     };
 
-    struct __attribute__((__packed__)) CONTROL_SENDFILE_HEADER             //Control code 0x05
+    struct __attribute__((__packed__)) CONTROL_SENDFILE                 //Control code 0x05
     {
         uint32_t dest_ip_addr;
         uint8_t init_ttl;
         uint8_t transfer_id;
-        uint16_t seq;
+        uint16_t init_seq;
     };
 
     struct __attribute__((__packed__)) CONTROL_FILESTATS_HEADER                    //Control code 0x06

@@ -33,7 +33,7 @@
 #include "../include/control_header_lib.h"
 #include "../include/author.h"
 #include "../include/routing_alg.h"
-
+#include "../include/data_handler.h"
 
 #define CNTRL_CONTROL_CODE_OFFSET 0x04
 #define CNTRL_PAYLOAD_LEN_OFFSET 0x06
@@ -181,6 +181,8 @@ bool control_recv_hook(int sock_index)
 
         case 0x05:
             // SENDFILE
+            send_file(payload_len, cntrl_payload);
+            //send_file_resp(sock_index);
             break;
 
         case 0x06:
