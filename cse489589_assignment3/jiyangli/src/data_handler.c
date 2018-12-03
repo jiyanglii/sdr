@@ -39,14 +39,10 @@ data_hist[0]  --->   LAST_DATA_PACKET
 data_hist[1]  --->   SECOND_LAST_DATA_PACKET
 */
 struct DATA data_hist[2] = {0};
+LIST_HEAD(TransferRecord_list, TransferRecord) TransferRecordList;
+struct TransferRecord * transfer_rec;
 
-
-/* Linked List for active data connections */
-struct DataConn
-{
-    int sockfd;
-    LIST_ENTRY(DataConn) next;
-}*connection, *conn_temp;
+struct DataConn *connection, *conn_temp;
 LIST_HEAD(DataConnsHead, DataConn) data_conn_list;
 
 int create_data_sock(uint16_t data_sock_num)
@@ -186,6 +182,7 @@ bool data_recv_hook(int sock_index)
         if(_data.ttl>0){
             sendALL(next_hop_fd, (char *)&_data, sizeof(struct DATA));
             update_data_record(&_data);
+            new_transfer_record(_data.transfer_id, _data.ttl, _data.seq_num);
         }
     }
 
@@ -234,6 +231,7 @@ void send_file(uint16_t payload_len, char * cntrl_payload)
                 // _data_packet_to_send is not EOF
                 sendALL(next_hop_fd, (char *)&_data_packet_to_send, sizeof(struct DATA));
                 update_data_record(&_data_packet_to_send);
+                new_transfer_record(_data_packet_to_send.transfer_id, _data_packet_to_send.ttl, _data_packet_to_send.seq_num);
                 memset(file_data_payload, '\0', MAX_DATA_PAYLOAD);
                 _data_packet.seq_num++;
             }
@@ -241,6 +239,7 @@ void send_file(uint16_t payload_len, char * cntrl_payload)
                 _data_packet.padding = DATA_FIN_FLAG_MASK;
                 sendALL(next_hop_fd, (char *)&_data_packet_to_send, sizeof(struct DATA));
                 update_data_record(&_data_packet_to_send);
+                new_transfer_record(_data_packet_to_send.transfer_id, _data_packet_to_send.ttl, _data_packet_to_send.seq_num);
                 memset(file_data_payload, '\0', MAX_DATA_PAYLOAD);
                 break;
             }
@@ -280,6 +279,39 @@ void save_data(struct DATA * _data)
 
         fclose(fp);
     }
+}
+
+struct TransferRecord * getExsitingTransfer(uint8_t _transfer_id)
+{
+    LIST_FOREACH(transfer_rec, &TransferRecordList, next)
+        if(transfer_rec->transfer_id == _transfer_id) return transfer_rec;
+
+    return (struct TransferRecord *)NULL;
+}
+
+
+void new_transfer(uint8_t _transfer_id)
+{
+    transfer_rec = calloc(1, sizeof(struct TransferRecord));
+    transfer_rec->transfer_id = _transfer_id;
+    transfer_rec->ttl = 0;
+    transfer_rec->fin = FALSE;
+    LIST_INSERT_HEAD(&TransferRecordList, transfer_rec, next);
+}
+
+void new_transfer_record(uint8_t _transfer_id, uint8_t _ttl, uint16_t _seq_num)
+{
+    struct TransferRecord * temp = getExsitingTransfer(_transfer_id);
+    if(!temp) // No record found, create a new one
+    {
+        new_transfer(_transfer_id);
+        temp = getExsitingTransfer(_transfer_id);
+    }
+
+    temp->ttl = _ttl;
+    struct SeqRecord temp_seq = {0};
+    temp_seq.seq_num = _seq_num;
+    TAILQ_INSERT_TAIL(&temp->_seq, &temp_seq, next);
 }
 
 
