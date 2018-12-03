@@ -35,7 +35,6 @@
 #include "../include/routing_alg.h"
 #include "../include/data_handler.h"
 #include "../include/control_handler.h"
-#include "../include/network_util.h"
 
 #define CNTRL_CONTROL_CODE_OFFSET 0x04
 #define CNTRL_PAYLOAD_LEN_OFFSET 0x06
@@ -165,26 +164,29 @@ bool control_recv_hook(int sock_index)
         case 0x01:
             // INIT
             router_init(cntrl_payload);
+            init_response(sock_index, control_code);
             break;
 
 
         case 0x02:
             // ROUTING TABLE
-            //routing_table_response(sock_index);
+            routing_table_response(sock_index, control_code);
             break;
 
         case 0x03:
             // UPDATE
+            update_response(sock_index, control_code);
             break;
 
         case 0x04:
             // CRASH
+            crash(sock_index, control_code);
             break;
 
         case 0x05:
             // SENDFILE
             send_file(payload_len, cntrl_payload);
-            send_file_resp(sock_index);
+            send_file_resp(sock_index, control_code);
             break;
 
         case 0x06:
@@ -193,12 +195,12 @@ bool control_recv_hook(int sock_index)
 
         case 0x07:
             // LAST_DATA_PACKET
-            send_prev_data(sock_index, 0x07);
+            send_prev_data(sock_index, control_code);
             break;
 
         case 0x08:
             // PE
-            send_prev_data(sock_index, 0x08);
+            send_prev_data(sock_index, control_code);
             break;
 
         default:    break;
@@ -216,14 +218,13 @@ bool control_recv_hook(int sock_index)
     return TRUE;
 }
 
-
-void crash(int sock_index){
+void crash(int sock_index, uint8_t _control_code){
     // Stop broadcasting routing table to neighbors
 
     // Send response message to controller
     char *cntrl_response_header;
 
-    cntrl_response_header = create_response_header(sock_index, 0x04, 0, 0);
+    cntrl_response_header = create_response_header(sock_index, _control_code, 0, 0);
     sendALL(sock_index, cntrl_response_header, CNTRL_RESP_HEADER_SIZE);
 
     // Stop self update timer
@@ -239,7 +240,7 @@ void crash(int sock_index){
 }
 
 
-void routing_table_response(int sock_index){
+void routing_table_response(int sock_index, uint8_t _control_code){
 
     uint16_t payload_len, response_len;
     char *cntrl_response_header, *cntrl_response;
@@ -254,7 +255,7 @@ void routing_table_response(int sock_index){
 
     payload_len = MAX_NODE_NUM * sizeof(struct CONTROL_ROUTING_TABLE);
     char * cntrl_response_payload = (char *) calloc(payload_len, sizeof(uint8_t));
-    cntrl_response_header = create_response_header(sock_index, 0x02, 0, payload_len);
+    cntrl_response_header = create_response_header(sock_index, _control_code, 0, payload_len);
 
     response_len = CNTRL_RESP_HEADER_SIZE+payload_len;
 
@@ -272,11 +273,11 @@ void routing_table_response(int sock_index){
 
 
 // if fin==1 send response
-void send_file_resp(int sock_index){
+void send_file_resp(int sock_index, uint8_t _control_code){
 
     char *cntrl_response_header;
 
-    cntrl_response_header = create_response_header(sock_index, 0x05, 0, CNTRL_RESP_HEADER_SIZE);
+    cntrl_response_header = create_response_header(sock_index, _control_code, 0, 0);
     sendALL(sock_index, cntrl_response_header, CNTRL_RESP_HEADER_SIZE);
     free(cntrl_response_header);
 }
@@ -291,15 +292,14 @@ void send_prev_data(int sock_index, uint8_t _control_code)
 
     cntrl_response = (char *) calloc(response_len, sizeof(uint8_t));
 
+    cntrl_response_header = create_response_header(sock_index, _control_code, 0, payload_len);
+    memcpy(cntrl_response, cntrl_response_header, CNTRL_RESP_HEADER_SIZE);
+
 
     if(_control_code == 0x07){
-        cntrl_response_header = create_response_header(sock_index, _control_code, 0, payload_len);
-        memcpy(cntrl_response, cntrl_response_header, CNTRL_RESP_HEADER_SIZE);
         memcpy(cntrl_response+CNTRL_RESP_HEADER_SIZE, (char *) &data_hist[0], payload_len);
     }
     else if(_control_code == 0x08){
-        cntrl_response_header = create_response_header(sock_index, _control_code, 0, payload_len);
-        memcpy(cntrl_response, cntrl_response_header, CNTRL_RESP_HEADER_SIZE);
         memcpy(cntrl_response+CNTRL_RESP_HEADER_SIZE, (char *) &data_hist[1], payload_len);
     }
 
@@ -309,4 +309,24 @@ void send_prev_data(int sock_index, uint8_t _control_code)
     free(cntrl_response_header);
 }
 
+void init_response(int sock_index, uint8_t _control_code){
 
+    char *cntrl_response_header;
+
+    cntrl_response_header = create_response_header(sock_index, _control_code, 0, 0);
+    sendALL(sock_index, cntrl_response_header, CNTRL_RESP_HEADER_SIZE);
+    free(cntrl_response_header);
+}
+
+void update_response(int sock_index, uint8_t _control_code){
+
+    char *cntrl_response_header;
+
+    cntrl_response_header = create_response_header(sock_index, _control_code, 0, 0);
+    sendALL(sock_index, cntrl_response_header, CNTRL_RESP_HEADER_SIZE);
+    free(cntrl_response_header);
+}
+
+// void file_stats_response(){
+
+// }

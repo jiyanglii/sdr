@@ -38,6 +38,12 @@ short test_init_payload[] = {       0x0002, 0x0002,
 
 uint16_t init_set = FALSE;
 
+// short test_send_file[] = {  0x1201, 0x000A,
+//                             0x050A, 0x1111,
+//                             , 
+
+// }
+
 void init_top()
 {
     printf("Calling init_top()!!\n");
@@ -47,9 +53,14 @@ void init_top()
     }
 }
 
+
 void processCMD(int cmd)
 {
     if(cmd == 0){
         init_top();
     }
+    // if (cmd == 1)
+    // {
+    //     /* code */
+    // }
 }

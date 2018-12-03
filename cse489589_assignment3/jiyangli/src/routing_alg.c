@@ -39,6 +39,7 @@
 #include "../include/connection_manager.h"
 #include "../include/control_handler.h"
 #include "../include/data_handler.h"
+#include "../include/network_util.h"
 
 
 #ifdef TEST
@@ -243,8 +244,6 @@ void router_update(char* update_payload){
     }
 }
 
-
-
 void GetPrimaryIP(struct IPV4_ADDR * _local_ip) {
     int sock = socket(AF_INET, SOCK_DGRAM, 0);
     if(sock <0) {
@@ -305,4 +304,3 @@ uint8_t new_data_link(uint32_t ip, int fd){
 
     return FALSE;
 }
-
