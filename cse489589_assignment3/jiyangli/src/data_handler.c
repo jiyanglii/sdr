@@ -292,7 +292,7 @@ struct TransferRecord * getExsitingTransfer(uint8_t _transfer_id)
 
 void new_transfer(uint8_t _transfer_id)
 {
-    transfer_rec = calloc(1, sizeof(struct TransferRecord));
+    transfer_rec = (struct TransferRecord *)calloc(1, sizeof(struct TransferRecord));
     transfer_rec->transfer_id = _transfer_id;
     transfer_rec->ttl = 0;
     transfer_rec->fin = FALSE;
