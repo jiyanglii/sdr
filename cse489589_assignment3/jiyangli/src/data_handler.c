@@ -164,8 +164,6 @@ bool data_recv_hook(int sock_index)
 {
     int next_hop_fd = 0;
     struct DATA _data = {0};
-    //char * raw_data = (char *) malloc(sizeof(char)*(DATA_HEADER_SIZE + MAX_DATA_PAYLOAD));;
-
 
     if(recvALL(sock_index, (char *)&_data, sizeof(struct DATA)) < 0){
         remove_data_conn(sock_index);
@@ -174,18 +172,23 @@ bool data_recv_hook(int sock_index)
 
     update_data_record(&_data);
 
-    //_data = *((struct DATA *)raw_data);
-
-    // Forwarding incoming data to next hop here
     data_packet_update(&_data);
-    next_hop_fd = get_next_hop(_data.dest_ip_addr);
 
-    if(_data.ttl>0){
-        sendALL(next_hop_fd, (char *)&_data, sizeof(struct DATA));
-        update_data_record(&_data);
+    // Check if destination is self
+    if(_data.dest_ip_addr == local_node_info->ip._ip)
+    {
+        save_data(&_data);
+    }
+    else{
+        // Forwarding incoming data to next hop here
+        next_hop_fd = get_next_hop(_data.dest_ip_addr);
+
+        if(_data.ttl>0){
+            sendALL(next_hop_fd, (char *)&_data, sizeof(struct DATA));
+            update_data_record(&_data);
+        }
     }
 
-    //free(raw_data);
     return TRUE;
 }
 
@@ -255,6 +258,28 @@ void update_data_record(struct DATA * _data)
 {
     data_hist[1] = data_hist[0];
     data_hist[0] = *_data;
+}
+
+void save_data(struct DATA * _data)
+{
+    FILE *fp;
+    size_t read_s = 0;
+    char file_name_str[8] = {0};
+
+    if(_data->ttl > 0) // Drop the packet when ttl reaches 0
+    {
+        snprintf(&file_name_str[0], 6, "%s", "file-");
+        snprintf(&file_name_str[5], 3, "%d", _data->transfer_id);
+
+        fp = fopen(file_name_str, "a");
+
+        if (fp) {
+            printf("File opened\n");
+            read_s = fwrite(_data->payload, 1, MAX_DATA_PAYLOAD, fp);
+        }
+
+        fclose(fp);
+    }
 }
 
 

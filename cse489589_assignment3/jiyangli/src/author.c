@@ -27,7 +27,7 @@
 #include "../include/control_header_lib.h"
 #include "../include/network_util.h"
 
-#define AUTHOR_STATEMENT "I, swetankk, have read and understood the course academic integrity policy."
+#define AUTHOR_STATEMENT "I, Jiyang Li, have read and understood the course academic integrity policy."
 
 void author_response(int sock_index)
 {

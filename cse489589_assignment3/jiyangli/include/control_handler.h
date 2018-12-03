@@ -11,3 +11,5 @@ void routing_table_response(int sock_index, uint8_t _control_code);
 void update_response(int sock_index, uint8_t _control_code);
 void crash(int sock_index, uint8_t _control_code);
 
+
+extern uint8_t CRASH;

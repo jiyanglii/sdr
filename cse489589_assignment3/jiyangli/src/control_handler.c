@@ -39,6 +39,7 @@
 #define CNTRL_CONTROL_CODE_OFFSET 0x04
 #define CNTRL_PAYLOAD_LEN_OFFSET 0x06
 
+uint8_t CRASH = FALSE;
 
 /* Linked List for active control connections */
 struct ControlConn
@@ -220,7 +221,7 @@ bool control_recv_hook(int sock_index)
 
 void crash(int sock_index, uint8_t _control_code){
     // Stop broadcasting routing table to neighbors
-
+    CRASH = TRUE;
     // Send response message to controller
     char *cntrl_response_header;
 

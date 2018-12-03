@@ -374,7 +374,7 @@ void timer_timeout_handler()
 
     for(int i=0;i<active_node_num;i++){
         if((node_table[i]._timer.timer_pending == TRUE) && (node_table[i].self == TRUE)){
-            send_update_table();
+            if(!CRASH) send_update_table();
 
             timeradd(&time_now, &router_update_ttl, &node_table[i]._timer.time_next);
             node_table[i]._timer.time_last = time_now;

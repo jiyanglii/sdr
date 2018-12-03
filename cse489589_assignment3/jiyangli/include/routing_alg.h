@@ -75,6 +75,7 @@ void BellmanFord_alg(char * update_packet);
 void send_update_table();
 
 extern struct ROUTER_INFO node_table[MAX_NODE_NUM];
+extern struct ROUTER_INFO * local_node_info;
 extern uint16_t active_node_num;
 extern uint16_t local_port;
 extern struct timeval router_update_ttl;
