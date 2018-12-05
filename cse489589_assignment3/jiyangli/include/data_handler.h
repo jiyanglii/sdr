@@ -1,4 +1,5 @@
 #pragma once
+#include <sys/queue.h>
 
 #define DATA_HEADER_SIZE    12 // including the padding
 #define MAX_DATA_PAYLOAD    1024

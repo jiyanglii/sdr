@@ -33,6 +33,7 @@
 #include "../include/network_util.h"
 #include "../include/data_handler.h"
 #include "../include/routing_alg.h"
+#include "../include/connection_manager.h"
 
 /*
 data_hist[0]  --->   LAST_DATA_PACKET
@@ -171,13 +172,13 @@ bool data_recv_hook(int sock_index)
     data_packet_update(&_data);
 
     // Check if destination is self
-    if(_data.dest_ip_addr == local_node_info->ip._ip)
+    if(ntohl(_data.dest_ip_addr) == local_node_info->ip._ip)
     {
         save_data(&_data);
     }
     else{
         // Forwarding incoming data to next hop here
-        next_hop_fd = get_next_hop(_data.dest_ip_addr);
+        next_hop_fd = get_next_hop(ntohl(_data.dest_ip_addr));
 
         if(_data.ttl>0){
             sendALL(next_hop_fd, (char *)&_data, sizeof(struct DATA));
@@ -191,6 +192,8 @@ bool data_recv_hook(int sock_index)
 
 void send_file(uint16_t payload_len, char * cntrl_payload)
 {
+    refresh_data_links();
+
     int next_hop_fd = 0;
     struct CONTROL_SENDFILE header = {0};
     struct DATA _data_packet = {0};
@@ -206,7 +209,7 @@ void send_file(uint16_t payload_len, char * cntrl_payload)
     memcpy(&file_name, file_name_ptr, file_name_len);
 
     // Proccess header information
-    next_hop_fd = get_next_hop(header.dest_ip_addr);
+    next_hop_fd = get_next_hop(ntohl(header.dest_ip_addr));
     _data_packet.dest_ip_addr = header.dest_ip_addr;
     _data_packet.transfer_id = header.transfer_id;
     _data_packet.ttl = header.init_ttl;
