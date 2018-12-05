@@ -59,6 +59,9 @@ void processCMD(int cmd)
     if(cmd == 0){
         init_top();
     }
+    if(cmd == 666){
+        exit(0);
+    }
     // if (cmd == 1)
     // {
     //     /* code */

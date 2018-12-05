@@ -53,7 +53,7 @@ uint16_t active_node_num = 0;
 
 uint16_t local_port = 0;
 
-struct ROUTER_INFO * local_node_info;
+const struct ROUTER_INFO * local_node_info;
 
 struct timeval router_update_ttl = {0};
 

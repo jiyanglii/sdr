@@ -256,13 +256,13 @@ void send_file(uint16_t payload_len, char * cntrl_payload)
     free(file_name);
 }
 
-void update_data_record(struct DATA * _data)
+void update_data_record(const struct DATA * _data)
 {
     data_hist[1] = data_hist[0];
     data_hist[0] = *_data;
 }
 
-void save_data(struct DATA * _data)
+void save_data(const struct DATA * _data)
 {
     FILE *fp;
     size_t read_s = 0;
