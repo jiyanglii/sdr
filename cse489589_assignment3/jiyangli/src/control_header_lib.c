@@ -50,8 +50,9 @@ char* create_response_header(int sock_index, uint8_t control_code, uint8_t respo
     socklen_t addr_size;
 
     buffer = (char *) malloc(sizeof(char)*CNTRL_RESP_HEADER_SIZE);
-
-    cntrl_resp_header = (struct CONTROL_RESPONSE_HEADER *) buffer;
+    #ifdef PACKET_USING_STRUCT
+        cntrl_resp_header = (struct CONTROL_RESPONSE_HEADER *) buffer;
+    #endif
 
     addr_size = sizeof(struct sockaddr_in);
     getpeername(sock_index, (struct sockaddr *)&addr, &addr_size);
