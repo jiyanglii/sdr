@@ -229,7 +229,7 @@ void crash(int sock_index, uint8_t _control_code){
     sendALL(sock_index, cntrl_response_header, CNTRL_RESP_HEADER_SIZE);
 
     // Stop self update timer
-    for (int i = 0; i < MAX_NODE_NUM; ++i)
+    for (int i = 0; i < active_node_num; ++i)
     {
         if(node_table[i].self == TRUE){
             timerclear(&node_table[i]._timer.time_last);
@@ -247,14 +247,14 @@ void routing_table_response(int sock_index, uint8_t _control_code){
     char *cntrl_response_header, *cntrl_response;
     struct CONTROL_ROUTING_TABLE cntrl_routing_table[MAX_NODE_NUM] = {0};
 
-    for (int i = 0; i < MAX_NODE_NUM; ++i)
+    for (int i = 0; i < active_node_num; ++i)
     {
         cntrl_routing_table[i].router_id   = node_table[i].raw_data.router_id;
         cntrl_routing_table[i].next_hop_id = node_table[i].next_hop_router_id;
         cntrl_routing_table[i].router_cost = node_table[i].cost_to;
     }
 
-    payload_len = MAX_NODE_NUM * sizeof(struct CONTROL_ROUTING_TABLE);
+    payload_len = active_node_num * sizeof(struct CONTROL_ROUTING_TABLE);
     cntrl_response_header = create_response_header(sock_index, _control_code, 0, payload_len);
 
     response_len = CNTRL_RESP_HEADER_SIZE+payload_len;

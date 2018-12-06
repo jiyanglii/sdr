@@ -3,7 +3,7 @@
 #include <arpa/inet.h>
 
 #define CNTRL_HEADER_SIZE 8
-#define CNTRL_RESP_HEADER_SIZE 8
+#define CNTRL_RESP_HEADER_SIZE sizeof(struct CONTROL_RESPONSE_HEADER)
 
 #define PACKET_USING_STRUCT // Comment this out to use alternate packet crafting technique
 
