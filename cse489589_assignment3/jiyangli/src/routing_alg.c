@@ -155,7 +155,7 @@ void router_init(char* init_payload){
 
 }
 
-void send_update_table()
+void send_update_table(void)
 {
     struct   ROUTING_UPDATE local_update_info = {0};
     struct   ROUTING_UPDATE_HEADER local_update_header = {0};

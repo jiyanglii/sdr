@@ -49,7 +49,7 @@ struct ControlConn
 }*connection, *conn_temp;
 LIST_HEAD(ControlConnsHead, ControlConn) control_conn_list;
 
-int create_control_sock()
+int create_control_sock(void)
 {
     int sock;
     struct sockaddr_in control_addr;
