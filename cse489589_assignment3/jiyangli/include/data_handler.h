@@ -1,4 +1,5 @@
 #pragma once
+#include <sys/queue.h>
 
 #define DATA_HEADER_SIZE    12 // including the padding
 #define MAX_DATA_PAYLOAD    1024
@@ -45,8 +46,8 @@ bool isData(int sock_index);
 bool data_recv_hook(int sock_index);
 int new_data_conn_client(int router_ip, int router_data_port);
 void send_file(uint16_t payload_len, char * cntrl_payload);
-void update_data_record(struct DATA * _data);
-void save_data(struct DATA * _data);
+void update_data_record(const struct DATA * _data);
+void save_data(const struct DATA * _data);
 void new_transfer_record(uint8_t _transfer_id, uint8_t _ttl, uint16_t _seq_num);
 
 

@@ -49,7 +49,7 @@ struct ControlConn
 }*connection, *conn_temp;
 LIST_HEAD(ControlConnsHead, ControlConn) control_conn_list;
 
-int create_control_sock()
+int create_control_sock(void)
 {
     int sock;
     struct sockaddr_in control_addr;
@@ -254,8 +254,12 @@ void routing_table_response(int sock_index, uint8_t _control_code){
         cntrl_routing_table[i].router_cost = node_table[i].cost_to;
     }
 
+<<<<<<< HEAD
     payload_len = active_node_num * sizeof(struct CONTROL_ROUTING_TABLE);
     char * cntrl_response_payload = (char *) calloc(payload_len, sizeof(uint8_t));
+=======
+    payload_len = MAX_NODE_NUM * sizeof(struct CONTROL_ROUTING_TABLE);
+>>>>>>> origin/DJ
     cntrl_response_header = create_response_header(sock_index, _control_code, 0, payload_len);
 
     response_len = CNTRL_RESP_HEADER_SIZE+payload_len;
@@ -263,8 +267,7 @@ void routing_table_response(int sock_index, uint8_t _control_code){
     cntrl_response = (char *) calloc(response_len, sizeof(uint8_t));
     memcpy(cntrl_response, cntrl_response_header, CNTRL_RESP_HEADER_SIZE);
 
-    memcpy(cntrl_response+CNTRL_RESP_HEADER_SIZE, (char *) cntrl_routing_table, payload_len);
-    free(cntrl_routing_table);
+    memcpy(cntrl_response+CNTRL_RESP_HEADER_SIZE, (char *)&cntrl_routing_table[0], payload_len);
 
     sendALL(sock_index, cntrl_response, response_len);
 

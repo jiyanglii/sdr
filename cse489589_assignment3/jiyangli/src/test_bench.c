@@ -20,10 +20,10 @@
 short test_init_payload[] = {       0x0002, 0x0002,
                                     0x0001, 3452,
                                     2344,   0002,
-                                    0xA8C0,   0xB201,
+                                    0x01B2,   0xC0A8,
                                     0x0002, 4562,
                                     2345,   0002,
-                                    0xA8C0,   0xB201,
+                                    0x01B3,   0xC0A8,
                                     0x0003, 8356,
                                     1635,   0002,
                                     0x80cd,   0x2421,
@@ -40,7 +40,7 @@ uint16_t init_set = FALSE;
 
 // short test_send_file[] = {  0x1201, 0x000A,
 //                             0x050A, 0x1111,
-//                             , 
+//                             ,
 
 // }
 
@@ -58,6 +58,9 @@ void processCMD(int cmd)
 {
     if(cmd == 0){
         init_top();
+    }
+    if(cmd == 666){
+        exit(0);
     }
     // if (cmd == 1)
     // {

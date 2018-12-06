@@ -126,6 +126,8 @@ void main_loop()
                 }
             }
         }
+
+        if(CRASH) exit(0);
     }
 }
 
@@ -203,6 +205,7 @@ void static data_sock_init(uint16_t data_sock_num)
 
 void routing_sock_init(uint16_t router_sock_num, uint16_t data_sock_num)
 {
+    printf("routing_sock_init\n");
     router_sock_init(router_sock_num);
     data_sock_init(data_sock_num);
 }
@@ -216,6 +219,7 @@ void refresh_data_links()
     for(int i=0;i<active_node_num;i++){
         if((node_table[i].link_status == FALSE) && (node_table[i].self == FALSE) && (node_table[i].neighbor == TRUE)){
             // Create new data link
+            printf("Create new data link on %s\n", node_table[i].ip._ip_str);
             _data_socket = new_data_conn_client(node_table[i].ip._ip, node_table[i].raw_data.router_data_port);
             if(_data_socket < 0){
                 printf("Link creation failed with %s\n", node_table[i].ip._ip_str);
@@ -252,10 +256,12 @@ void udp_router_update(char * payload, uint16_t payload_len)
                 routeraddr.sin_addr.s_addr = node_table[i].ip._ip;
                 routeraddr.sin_port = htons(node_table[i].raw_data.router_router_port);
 
+                printf("Router upload payload: %s\n", payload);
+
                 if(sendto(router_socket, payload, payload_len, 0, (struct sockaddr *)&routeraddr, sizeof(struct sockaddr_in)) != payload_len)
                 {
                     //Sendto failed
-                    printf("UPD send failed!\n");;
+                    printf("UDP send failed! Sending %d bytes.\n",payload_len);
                 }
             }
         }
@@ -354,7 +360,7 @@ void timer_handler()
 
     if(timerisset(&next_sched)){                    // Next scheduled time if found
         timersub(&next_sched, &time_now, &timer);   // Find the time between now to next_sched to be the timer
-        printf("Exiting the timer handler with new timer in %ld sec\n", next_sched.tv_sec);
+        printf("Exiting the timer handler with new timer in %ld sec %d usec\n", next_sched.tv_sec - time_now.tv_sec, next_sched.tv_usec - time_now.tv_usec);
     }
     else {
         timerclear(&next_sched);
@@ -374,7 +380,8 @@ void timer_timeout_handler()
 
     for(int i=0;i<active_node_num;i++){
         if((node_table[i]._timer.timer_pending == TRUE) && (node_table[i].self == TRUE)){
-            if(!CRASH) send_update_table();
+            printf("Sending update table --- n");
+            send_update_table();
 
             timeradd(&time_now, &router_update_ttl, &node_table[i]._timer.time_next);
             node_table[i]._timer.time_last = time_now;
