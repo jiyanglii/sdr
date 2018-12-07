@@ -35,6 +35,10 @@
 #include "../include/routing_alg.h"
 #include "../include/connection_manager.h"
 
+#ifdef TEST
+#include "../include/test_bench.h"
+#endif
+
 /*
 data_hist[0]  --->   LAST_DATA_PACKET
 data_hist[1]  --->   SECOND_LAST_DATA_PACKET

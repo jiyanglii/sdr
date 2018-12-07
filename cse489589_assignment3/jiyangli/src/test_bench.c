@@ -8,6 +8,7 @@
 #include <limits.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <stdarg.h>
 
 #include "../include/global.h"
 #include "../include/test_bench.h"
@@ -16,6 +17,8 @@
 #include "../include/connection_manager.h"
 #include "../include/control_handler.h"
 #include "../include/data_handler.h"
+
+int ret_print, ret_log;
 
 uint16_t test_init_payload[] = {       0x0200, 0x0600,
                                     0x0100, 3452,
@@ -100,5 +103,25 @@ void payload_printer(uint16_t payload_len, const char * payload)
     printf("\n");
 }
 
+
+void debug_print(const char* format, ...)
+{
+    va_list args_pointer;
+
+    va_start(args_pointer, format);
+    ret_print = vprintf(format, args_pointer);
+
+    FILE* fp;
+    if((fp = fopen("LOGFILE.txt", "a")) == NULL){
+        ret_log = -100;
+        va_end(args_pointer);
+    }
+
+    va_start(args_pointer, format);
+    ret_log = vfprintf(fp, format, args_pointer);
+
+    fclose(fp);
+    va_end(args_pointer);
+}
 
 
