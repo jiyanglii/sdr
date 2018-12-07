@@ -380,7 +380,7 @@ void timer_timeout_handler()
 
     for(int i=0;i<active_node_num;i++){
         if((node_table[i]._timer.timer_pending == TRUE) && (node_table[i].self == TRUE)){
-            printf("Sending update table --- n");
+            printf("Sending update table ..... \n");
             send_update_table();
 
             timeradd(&time_now, &router_update_ttl, &node_table[i]._timer.time_next);

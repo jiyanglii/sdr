@@ -17,11 +17,11 @@
 #include "../include/control_handler.h"
 #include "../include/data_handler.h"
 
-short test_init_payload[] = {       0x0002, 0x0002,
-                                    0x0001, 3452,
+short test_init_payload[] = {       0x0200, 0x0200,
+                                    0x0100, 3452,
                                     2344,   0002,
                                     0x01B2,   0xC0A8,
-                                    0x0002, 4562,
+                                    0x0200, 4562,
                                     2345,   0002,
                                     0x01B3,   0xC0A8,
                                     0x0003, 8356,
