@@ -329,6 +329,17 @@ void timer_handler()
                 next_sched = node_table[i]._timer.time_next;
                 next_sched_router_id = node_table[i].raw_data.router_id;
             }
+            else if((timercmp(&time_now, &node_table[i]._timer.time_next, >)) && (node_table[i].self == TRUE)) // Missed local routing table bradcasting
+            {
+                // send a update right now
+                printf("Sending update table (MISSED) ..... \n");
+                send_update_table();
+                node_table[i]._timer.time_last = time_now;
+                // Update timer
+                do{
+                    timeradd(&node_table[i]._timer.time_next, &router_update_ttl, &node_table[i]._timer.time_next);
+                }while(timercmp(&node_table[i]._timer.time_next, &time_now, <)); // If next schefuled time is still smaller than current time, keep adding ttl
+            }
             else if(timercmp(&time_now, &node_table[i]._timer.time_next, >)) // Current time is greater then the sched time: this node is timed out
             {
                 timersub(&time_now, &node_table[i]._timer.time_next, &diff);// Find the time difference from now to the sched time
@@ -368,7 +379,7 @@ void timer_handler()
         timer.tv_sec = INT16_MAX;
         printf("Exiting the timer handler without new timer!!\n");
         // When no schedule is found, MAX the timeout to block select() until next fd is set
-        // Do not set timeout to ZERO, Zreo timeout would overrun the mainloop()
+        // Do not set timeout to ZERO, Zero timeout would overrun the mainloop()
     }
 }
 
