@@ -36,6 +36,10 @@
 #include "../include/data_handler.h"
 #include "../include/control_handler.h"
 
+#ifdef TEST
+#include "../include/test_bench.h"
+#endif
+
 #define CNTRL_CONTROL_CODE_OFFSET 0x04
 #define CNTRL_PAYLOAD_LEN_OFFSET 0x06
 
@@ -157,6 +161,13 @@ bool control_recv_hook(int sock_index)
         }
     }
 
+#ifdef DEBUG
+    printf("Incoming control(%d) payload:\n", control_code);
+    payload_printer(payload_len, cntrl_payload);
+    printf("\n");
+#endif
+
+
     /* Triage on control_code */
     switch(control_code){
         case 0: author_response(sock_index);
@@ -264,7 +275,13 @@ void routing_table_response(int sock_index, uint8_t _control_code){
 
     memcpy(cntrl_response+CNTRL_RESP_HEADER_SIZE, (char *)&cntrl_routing_table[0], payload_len);
 
-    sendALL(sock_index, cntrl_response, response_len);
+#ifdef DEBUG
+    printf("routing_table_response payload:\n");
+    payload_printer(response_len, cntrl_response);
+    printf("\n");
+#endif
+
+    if(sock_index > 0) sendALL(sock_index, cntrl_response, response_len);
 
     free(cntrl_response);
     free(cntrl_response_header);

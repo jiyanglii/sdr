@@ -1,6 +1,7 @@
 #pragma once
 
 #define TEST
+#define DEBUG
 #define STDIN 0
 
 #include <stdio.h>
