@@ -371,7 +371,7 @@ void timer_handler()
 
     if(timerisset(&next_sched)){                    // Next scheduled time if found
         timersub(&next_sched, &time_now, &timer);   // Find the time between now to next_sched to be the timer
-        printf("Exiting the timer handler with new timer in %ld sec %d usec\n", next_sched.tv_sec - time_now.tv_sec, next_sched.tv_usec - time_now.tv_usec);
+        printf("Exiting the timer handler with new timer in %d sec %d usec\n", (uint32_t)(next_sched.tv_sec - time_now.tv_sec), (uint32_t)(next_sched.tv_usec - time_now.tv_usec));
     }
     else {
         timerclear(&next_sched);

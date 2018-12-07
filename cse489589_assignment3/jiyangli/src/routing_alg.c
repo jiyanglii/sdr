@@ -101,6 +101,7 @@ void router_init(char* init_payload){
         ptr += sizeof(struct CONTROL_INIT_ROUTER_INFO);
 
         node_table[i].next_hop_router_id = UINT16_MAX;
+        node_table[i].cost_to = (node_table[i].raw_data.router_cost);
 
         if(node_table[i].ip._ip == local_ip._ip)
         {
@@ -117,12 +118,10 @@ void router_init(char* init_payload){
             timeradd(&node_table[i]._timer.time_last, &router_update_ttl, &node_table[i]._timer.time_next);
         }else node_table[i].self = FALSE;
 
-        if(ntohs(node_table[i].raw_data.router_cost) != UINT16_MAX){
+        if(node_table[i].raw_data.router_cost != UINT16_MAX){
             node_table[i].neighbor = TRUE;
             node_table[i].next_hop_router_id = node_table[i].raw_data.router_id;
         } else node_table[i].neighbor = FALSE;
-
-        node_table[i].cost_to = ntohs(node_table[i].raw_data.router_cost);
 
         // General initialization
         node_table[i].link_status = FALSE;

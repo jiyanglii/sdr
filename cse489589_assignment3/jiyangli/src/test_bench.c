@@ -17,7 +17,7 @@
 #include "../include/control_handler.h"
 #include "../include/data_handler.h"
 
-short test_init_payload[] = {       0x0200, 0x0600,
+uint16_t test_init_payload[] = {       0x0200, 0x0600,
                                     0x0100, 3452,
                                     2344,   0002,
                                     0x01B2,   0xC0A8,
