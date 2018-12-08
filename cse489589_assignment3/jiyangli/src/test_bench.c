@@ -8,6 +8,7 @@
 #include <limits.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <stdarg.h>
 
 #include "../include/global.h"
 #include "../include/test_bench.h"
@@ -16,6 +17,8 @@
 #include "../include/connection_manager.h"
 #include "../include/control_handler.h"
 #include "../include/data_handler.h"
+
+int ret_print, ret_log;
 
 uint16_t test_init_payload[] = {       0x0200, 0x0600,
                                     0x0100, 3452,
@@ -62,6 +65,35 @@ void processCMD(int cmd)
     else if(cmd == 2){
         routing_table_response(0,2);
     }
+    else if(cmd == 6){
+        // Auto generate file stats
+        // Create 3 transfer records
+        new_transfer_record(0xaa,0x55,0x0000);
+        new_transfer_record(0xbb,0x66,0x1000);
+        new_transfer_record(0xcc,0x77,0x2000);
+
+        for(int i=0;i<20;i++)
+        {
+            // add 20 new records for each file
+            new_transfer_record(0xaa,(0x55-i),(0x0000+i));
+            new_transfer_record(0xbb,(0x66-i*2),(0x1000+i*2));
+            new_transfer_record(0xcc,(0x77-i*3),(0x2000+i*3));
+        }
+
+        // Get filestats payload
+        char * _payload = get_file_stats_payload(0xbb);
+        uint16_t _payload_len = *((uint16_t *)(_payload + 2));
+        payload_printer((_payload_len), (char *)_payload);
+
+        _payload = get_file_stats_payload(0xaa);
+        _payload_len = *((uint16_t *)(_payload + 2));
+        payload_printer((_payload_len), (char *)_payload);
+
+        _payload = get_file_stats_payload(0xcc);
+        _payload_len = *((uint16_t *)(_payload + 2));
+        payload_printer((_payload_len), (char *)_payload);
+
+    }
     if(cmd == 666){
         exit(0);
     }
@@ -75,7 +107,7 @@ void payload_printer(uint16_t payload_len, const char * payload)
 {
 
     uint16_t ptr = 0;
-    for(ptr=0; ptr<(payload_len - 16); ptr+=16)
+    for(ptr=0; ptr<=(payload_len - 16); ptr+=16)
     {
         printf("%08x", ptr);
         printf("  ");
@@ -94,11 +126,31 @@ void payload_printer(uint16_t payload_len, const char * payload)
         for(;ptr<payload_len;ptr++){
             printf("%02x ", (uint8_t)payload[ptr]);
             _ptr++;
-            if(_ptr>7) printf(" ");
+            if(_ptr==8) printf(" ");
         }
     }
     printf("\n");
 }
 
+
+void debug_print(const char* format, ...)
+{
+    va_list args_pointer;
+
+    va_start(args_pointer, format);
+    ret_print = vprintf(format, args_pointer);
+
+    FILE* fp;
+    if((fp = fopen("LOGFILE.txt", "a")) == NULL){
+        ret_log = -100;
+        va_end(args_pointer);
+    }
+
+    va_start(args_pointer, format);
+    ret_log = vfprintf(fp, format, args_pointer);
+
+    fclose(fp);
+    va_end(args_pointer);
+}
 
 

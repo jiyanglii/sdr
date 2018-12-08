@@ -34,6 +34,12 @@ struct __attribute__((__packed__)) ROUTING_UPDATE
     uint16_t router_cost;
 };
 
+struct __attribute__((__packed__)) COST_UPDATE
+{
+    uint16_t router_id;
+    uint16_t cost;
+};
+
 struct IPV4_ADDR
 {
     uint32_t _ip;
@@ -46,6 +52,8 @@ struct ROUTER_UPDATE_TIMER
     uint8_t time_outs;          // Number of timed out
     struct timeval time_last;   // the time that recieved the last update
     struct timeval time_next;   // The expected time for the next update
+
+    struct timeval ttl;         // Unique ttl for this router
 };
 
 struct ROUTER_INFO
@@ -73,6 +81,7 @@ int get_next_hop(uint32_t dest_ip);
 uint8_t new_data_link(uint32_t ip, int fd);
 void BellmanFord_alg(char * update_packet);
 void send_update_table(void);
+void cost_update(const char * _payload);
 
 extern struct ROUTER_INFO node_table[MAX_NODE_NUM];
 extern const struct ROUTER_INFO * local_node_info;

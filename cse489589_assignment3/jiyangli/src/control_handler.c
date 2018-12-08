@@ -162,7 +162,7 @@ bool control_recv_hook(int sock_index)
     }
 
 #ifdef DEBUG
-    printf("Incoming control(%d) payload:\n", control_code);
+    printf("Incoming control(cntl code: %d) payload:\n", control_code);
     payload_printer(payload_len, cntrl_payload);
     printf("\n");
 #endif
@@ -176,7 +176,7 @@ bool control_recv_hook(int sock_index)
         case 0x01:
             // INIT
             router_init(cntrl_payload);
-            init_response(sock_index, control_code);
+            control_response(sock_index, control_code);
             break;
 
 
@@ -187,7 +187,8 @@ bool control_recv_hook(int sock_index)
 
         case 0x03:
             // UPDATE
-            update_response(sock_index, control_code);
+            cost_update(cntrl_payload);
+            control_response(sock_index, control_code);
             break;
 
         case 0x04:
@@ -203,6 +204,7 @@ bool control_recv_hook(int sock_index)
 
         case 0x06:
             // SENDFILE-STATS
+            send_file_stats_response(sock_index, control_code, cntrl_payload);
             break;
 
         case 0x07:
@@ -326,7 +328,7 @@ void send_prev_data(int sock_index, uint8_t _control_code)
     free(cntrl_response_header);
 }
 
-void init_response(int sock_index, uint8_t _control_code){
+void control_response(int sock_index, uint8_t _control_code){
 
     char *cntrl_response_header;
 
@@ -335,15 +337,35 @@ void init_response(int sock_index, uint8_t _control_code){
     free(cntrl_response_header);
 }
 
-void update_response(int sock_index, uint8_t _control_code){
 
+void send_file_stats_response(int sock_index, uint8_t _control_code, const char * _payload)
+{
     char *cntrl_response_header;
+    char *cntrl_response;
+    uint8_t _transfer_id = *((uint8_t *)_payload);
+    uint16_t _payload_len = 0;
+
+    char * file_stats_payload = get_file_stats_payload(_transfer_id);
+    _payload_len = *((uint16_t *)(_payload + 2));
+
+    // Recover the padding to 0
+    *((uint16_t *)(_payload + 2)) = 0x0000;
 
     cntrl_response_header = create_response_header(sock_index, _control_code, 0, 0);
-    sendALL(sock_index, cntrl_response_header, CNTRL_RESP_HEADER_SIZE);
+
+    cntrl_response = calloc((CNTRL_RESP_HEADER_SIZE + _payload_len),sizeof(char));
+    memcpy(cntrl_response, cntrl_response_header, CNTRL_RESP_HEADER_SIZE);
+    memcpy((cntrl_response + CNTRL_RESP_HEADER_SIZE), file_stats_payload, _payload_len);
+
+
+    sendALL(sock_index, cntrl_response, (CNTRL_RESP_HEADER_SIZE + _payload_len));
+
+    free(cntrl_response);
     free(cntrl_response_header);
+    free(file_stats_payload);
 }
 
-// void file_stats_response(){
 
-// }
+
+
+

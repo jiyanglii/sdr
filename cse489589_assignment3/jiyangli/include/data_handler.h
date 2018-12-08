@@ -27,7 +27,7 @@ struct TransferRecord
     uint8_t fin;
     TAILQ_HEAD(SeqRecord_list, SeqRecord) _seq;
 
-    LIST_ENTRY(TransferRecord) next;
+    LIST_ENTRY(TransferRecord) entries;
 };
 
 struct __attribute__((__packed__)) DATA
@@ -45,10 +45,11 @@ int new_data_conn(int sock_index);
 bool isData(int sock_index);
 bool data_recv_hook(int sock_index);
 int new_data_conn_client(int router_ip, int router_data_port);
-void send_file(uint16_t payload_len, char * cntrl_payload);
+void send_file(uint16_t payload_len, const char * cntrl_payload);
 void update_data_record(const struct DATA * _data);
 void save_data(const struct DATA * _data);
 void new_transfer_record(uint8_t _transfer_id, uint8_t _ttl, uint16_t _seq_num);
+char * get_file_stats_payload(uint16_t _transfer_id);
 
 
 extern struct DATA data_hist[2];
