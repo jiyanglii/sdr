@@ -24,7 +24,6 @@
 #include "../include/global.h"
 #include "../include/connection_manager.h"
 
-
 /**
  * main function
  *

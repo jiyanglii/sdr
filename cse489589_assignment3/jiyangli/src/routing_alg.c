@@ -79,8 +79,8 @@ void router_init(char* init_payload){
     header = *((struct CONTROL_INIT_HEADER *)ptr);
     ptr += sizeof(struct CONTROL_INIT_HEADER);
 
-    active_node_num = header.router_num;
-    router_update_ttl.tv_sec = header.ttl;
+    active_node_num = ntohs(header.router_num);
+    router_update_ttl.tv_sec = ntohs(header.ttl);
 
 #ifdef DEBUG
     printf("active_node_num: %hu\n", active_node_num);
@@ -101,6 +101,7 @@ void router_init(char* init_payload){
         ptr += sizeof(struct CONTROL_INIT_ROUTER_INFO);
 
         node_table[i].next_hop_router_id = UINT16_MAX;
+        node_table[i].cost_to = (node_table[i].raw_data.router_cost);
 
         if(node_table[i].ip._ip == local_ip._ip)
         {
@@ -121,8 +122,6 @@ void router_init(char* init_payload){
             node_table[i].neighbor = TRUE;
             node_table[i].next_hop_router_id = node_table[i].raw_data.router_id;
         } else node_table[i].neighbor = FALSE;
-
-        node_table[i].cost_to = node_table[i].raw_data.router_cost;
 
         // General initialization
         node_table[i].link_status = FALSE;
