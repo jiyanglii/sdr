@@ -162,7 +162,7 @@ bool control_recv_hook(int sock_index)
     }
 
 #ifdef DEBUG
-    printf("Incoming control(%d) payload:\n", control_code);
+    printf("Incoming control(cntl code: %d) payload:\n", control_code);
     payload_printer(payload_len, cntrl_payload);
     printf("\n");
 #endif

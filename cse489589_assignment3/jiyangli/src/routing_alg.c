@@ -90,6 +90,11 @@ void router_init(char* init_payload){
     for(int i=0;i<active_node_num;i++){
         node_table[i].raw_data = *((struct CONTROL_INIT_ROUTER_INFO *)ptr);
 
+#ifdef DEBUG
+        printf("raw_data: node_table[%d] router_ip: %x\n", i, node_table[i].raw_data.router_ip);
+        printf("raw_data: node_table[%d] router_router_port: %s\n", i, node_table[i].raw_data.router_router_port);
+#endif
+
         // Endian
         node_table[i].raw_data.router_ip = (node_table[i].raw_data.router_ip); //ntohl
         node_table[i].raw_data.router_router_port = ntohs(node_table[i].raw_data.router_router_port);
@@ -162,9 +167,9 @@ void send_update_table(void)
     char     *table_response = (char *) malloc(MAX_ROUTING_UPDATE_PAYLOAD_SIZE);
 
 
-    local_update_header.router_num = active_node_num;
-    local_update_header.source_router_port = ntohs(local_node_info->raw_data.router_router_port);
-    local_update_header.source_router_ip   = ntohl(local_node_info->ip._ip);
+    local_update_header.router_num = htons(active_node_num);
+    local_update_header.source_router_port = htons(local_node_info->raw_data.router_router_port);
+    local_update_header.source_router_ip   = (local_node_info->ip._ip);
 
     memcpy(table_response, (char *)&local_update_header, sizeof(struct ROUTING_UPDATE_HEADER));
     table_response += sizeof(struct ROUTING_UPDATE_HEADER);
@@ -174,15 +179,21 @@ void send_update_table(void)
     for(int i=0;i<active_node_num;i++)
     {
 
-        local_update_info.router_ip   = ntohl(node_table[i].raw_data.router_ip);
-        local_update_info.router_port = ntohs(node_table[i].raw_data.router_router_port);
+        local_update_info.router_ip   = (node_table[i].raw_data.router_ip);
+        local_update_info.router_port = htons(node_table[i].raw_data.router_router_port);
         local_update_info.router_id   = node_table[i].raw_data.router_id;
-        local_update_info.router_cost = node_table[i].cost_to;
+        local_update_info.router_cost = htons(node_table[i].cost_to);
 
         memcpy(table_response, (char *)&local_update_info, sizeof(struct ROUTING_UPDATE));
         table_response += sizeof(struct ROUTING_UPDATE);
         payload_len += sizeof(struct ROUTING_UPDATE);
     }
+
+#ifdef DEBUG
+    printf("Outgoing routing table update payload:\n");
+    payload_printer(payload_len, table_response);
+    printf("\n");
+#endif
 
     udp_router_update(table_response, payload_len);
 }
@@ -200,8 +211,14 @@ void BellmanFord_alg(char * update_packet){
     header = *((struct ROUTING_UPDATE_HEADER *)ptr);
     ptr += sizeof(struct CONTROL_INIT_HEADER);
 
-    uint16_t update_fields = header.router_num;
+    uint16_t update_fields = ntohs(header.router_num);
     uint32_t source_ip = ntohl(header.source_router_ip);
+
+#ifdef DEBUG
+    printf("Incoming routing table update payload from %x:\n", source_ip);
+    payload_printer(update_fields*sizeof(struct ROUTING_UPDATE), ptr);
+    printf("\n");
+#endif
 
     for(int i=0;i<update_fields;i++){
         router_info[i] = *((struct ROUTING_UPDATE *)ptr);
@@ -219,7 +236,7 @@ void BellmanFord_alg(char * update_packet){
     // update routing table of node_table
     for (int i = 0; i < MAX_NODE_NUM; ++i)
     {
-        if ((node_table[i].self == FALSE)&&(source_id != node_table[i].raw_data.router_id))
+        if ((node_table[i].self == FALSE) && (source_id != node_table[i].raw_data.router_id))
         {
             for (int j = 0; j < update_fields; ++j)
             {
