@@ -9,6 +9,6 @@ void send_prev_data(int sock_index, uint8_t _control_code);
 void control_response(int sock_index, uint8_t _control_code);
 void routing_table_response(int sock_index, uint8_t _control_code);
 void crash(int sock_index, uint8_t _control_code);
-void send_file_stats_response(const char * _payload);
+void send_file_stats_response(int sock_index, uint8_t _control_code, const char * _payload);
 
 extern uint8_t CRASH;

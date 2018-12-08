@@ -92,7 +92,7 @@ void router_init(char* init_payload){
 
 #ifdef DEBUG
         printf("raw_data: node_table[%d] router_ip: %x\n", i, node_table[i].raw_data.router_ip);
-        printf("raw_data: node_table[%d] router_router_port: %s\n", i, node_table[i].raw_data.router_router_port);
+        printf("raw_data: node_table[%d] router_router_port: %x\n", i, node_table[i].raw_data.router_router_port);
 #endif
 
         // Endian

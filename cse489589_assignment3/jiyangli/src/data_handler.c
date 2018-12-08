@@ -44,7 +44,8 @@ data_hist[0]  --->   LAST_DATA_PACKET
 data_hist[1]  --->   SECOND_LAST_DATA_PACKET
 */
 struct DATA data_hist[2] = {0};
-LIST_HEAD(TransferRecord_list, TransferRecord) TransferRecordList;
+
+LIST_HEAD(TransferRecord_list, TransferRecord) TransferRecordList = LIST_HEAD_INITIALIZER(TransferRecordList);
 struct TransferRecord * transfer_rec;
 
 struct DataConn *connection, *conn_temp;
@@ -291,8 +292,10 @@ void save_data(const struct DATA * _data)
 
 struct TransferRecord * getExsitingTransfer(uint8_t _transfer_id)
 {
-    LIST_FOREACH(transfer_rec, &TransferRecordList, next)
-        if(transfer_rec->transfer_id == _transfer_id) return transfer_rec;
+    LIST_FOREACH(transfer_rec, &TransferRecordList, entries){
+        printf("transfer_rec->transfer_id: = %x\n", transfer_rec->transfer_id);
+        if(transfer_rec->transfer_id == _transfer_id) return (struct TransferRecord *)transfer_rec;
+    }
 
     return (struct TransferRecord *)NULL;
 }
@@ -300,26 +303,44 @@ struct TransferRecord * getExsitingTransfer(uint8_t _transfer_id)
 
 void new_transfer(uint8_t _transfer_id)
 {
-    transfer_rec = (struct TransferRecord *)calloc(1, sizeof(struct TransferRecord));
+    transfer_rec = NULL;
+    transfer_rec = (struct TransferRecord *)malloc(sizeof(struct TransferRecord));
     transfer_rec->transfer_id = _transfer_id;
     transfer_rec->ttl = 0;
     transfer_rec->fin = FALSE;
-    LIST_INSERT_HEAD(&TransferRecordList, transfer_rec, next);
+    TAILQ_INIT(&transfer_rec->_seq);
+    //transfer_rec->_seq.tqh_first = NULL;
+
+    LIST_INSERT_HEAD(&TransferRecordList, transfer_rec, entries);
 }
 
 void new_transfer_record(uint8_t _transfer_id, uint8_t _ttl, uint16_t _seq_num)
 {
+#ifdef DEBUG
+    printf("New transfer record for ID: %x, TTL: %x, Seq: %x.\n", _transfer_id, _ttl, _seq_num);
+#endif
     struct TransferRecord * temp = getExsitingTransfer(_transfer_id);
     if(!temp) // No record found, create a new one
     {
+        printf("Transfer ID %x does not exist now, creating new entry!\n", _transfer_id);
         new_transfer(_transfer_id);
+
         temp = getExsitingTransfer(_transfer_id);
     }
 
     temp->ttl = _ttl;
-    struct SeqRecord temp_seq = {0};
-    temp_seq.seq_num = _seq_num;
-    TAILQ_INSERT_TAIL(&temp->_seq, &temp_seq, next);
+    //struct SeqRecord temp_seq = {0};
+    struct SeqRecord * temp_seq = (struct SeqRecord *)malloc(sizeof(struct SeqRecord));
+    temp_seq->seq_num = _seq_num;
+
+    // Problem with expanding TAILQ_INSERT_TAIL, manually do the expansion
+    //printf("temp->_seq->tqh_last%s\n", temp->_seq.tqh_last);
+    temp_seq->next.tqe_next = NULL;
+    temp_seq->next.tqe_prev = temp->_seq.tqh_last;
+    *(temp->_seq).tqh_last = (temp_seq);
+    temp->_seq.tqh_last = &temp_seq->next.tqe_next;
+
+    //TAILQ_INSERT_TAIL(temp->_seq, &temp_seq, next);
 }
 
 char * get_file_stats_payload(uint16_t _transfer_id)
@@ -333,9 +354,30 @@ char * get_file_stats_payload(uint16_t _transfer_id)
     TAILQ_FOREACH(seq_rec, &_trecord->_seq, next)
         seq_entry_num++;
 
-
+    //printf("seq_entry_num: %d\n", seq_entry_num);
+    //printf("payload len: %d\n", (seq_entry_num*2 + 4), sizeof(uint8_t));
 
     char * file_stats_payload = calloc((seq_entry_num*2 + 4), sizeof(uint8_t));
+
+    char * ptr = file_stats_payload;
+
+    *ptr = _transfer_id;
+    ptr++;
+
+    *ptr = _trecord->ttl;
+    ptr++;
+
+    // Use the padding field to pass the payload length info to upper layer
+    uint16_t len = (seq_entry_num*2 + 4);
+    *(uint16_t *)ptr = (uint16_t)len;
+    ptr+=2;
+
+    TAILQ_FOREACH(seq_rec, &_trecord->_seq, next)
+    {
+        *(uint16_t *)ptr = (uint16_t)(seq_rec->seq_num);
+        ptr+=2;
+    }
+
 
     return file_stats_payload;
 }

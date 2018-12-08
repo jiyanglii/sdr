@@ -27,7 +27,7 @@ struct TransferRecord
     uint8_t fin;
     TAILQ_HEAD(SeqRecord_list, SeqRecord) _seq;
 
-    LIST_ENTRY(TransferRecord) next;
+    LIST_ENTRY(TransferRecord) entries;
 };
 
 struct __attribute__((__packed__)) DATA
