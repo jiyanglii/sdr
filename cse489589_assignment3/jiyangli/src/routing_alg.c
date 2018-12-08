@@ -91,7 +91,7 @@ void router_init(char* init_payload){
         node_table[i].raw_data = *((struct CONTROL_INIT_ROUTER_INFO *)ptr);
 
         // Endian
-        node_table[i].raw_data.router_ip = ntohl(node_table[i].raw_data.router_ip);
+        node_table[i].raw_data.router_ip = (node_table[i].raw_data.router_ip); //ntohl
         node_table[i].raw_data.router_router_port = ntohs(node_table[i].raw_data.router_router_port);
         node_table[i].raw_data.router_data_port = ntohs(node_table[i].raw_data.router_data_port);
 
@@ -103,7 +103,7 @@ void router_init(char* init_payload){
         node_table[i].next_hop_router_id = UINT16_MAX;
         node_table[i].cost_to = (node_table[i].raw_data.router_cost);
 
-        if(node_table[i].ip._ip == local_ip._ip)
+        if((node_table[i].ip._ip == local_ip._ip) && (node_table[i].cost_to == 0))
         {
             // This is the self node
             self_found = TRUE;

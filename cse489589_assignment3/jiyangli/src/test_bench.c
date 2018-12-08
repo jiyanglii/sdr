@@ -78,7 +78,7 @@ void payload_printer(uint16_t payload_len, const char * payload)
 {
 
     uint16_t ptr = 0;
-    for(ptr=0; ptr<(payload_len - 16); ptr+=16)
+    for(ptr=0; ptr<=(payload_len - 16); ptr+=16)
     {
         printf("%08x", ptr);
         printf("  ");
@@ -97,7 +97,7 @@ void payload_printer(uint16_t payload_len, const char * payload)
         for(;ptr<payload_len;ptr++){
             printf("%02x ", (uint8_t)payload[ptr]);
             _ptr++;
-            if(_ptr>7) printf(" ");
+            if(_ptr==7) printf(" ");
         }
     }
     printf("\n");
