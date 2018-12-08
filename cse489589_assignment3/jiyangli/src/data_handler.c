@@ -194,7 +194,7 @@ bool data_recv_hook(int sock_index)
     return TRUE;
 }
 
-void send_file(uint16_t payload_len, char * cntrl_payload)
+void send_file(uint16_t payload_len,const char * cntrl_payload)
 {
     refresh_data_links();
 
@@ -203,7 +203,7 @@ void send_file(uint16_t payload_len, char * cntrl_payload)
     struct DATA _data_packet = {0};
     struct DATA _data_packet_to_send = {0}; // A delayed version to detect EOF
 
-    char * file_name_ptr = cntrl_payload + sizeof(struct CONTROL_SENDFILE);
+    char * file_name_ptr = (char *)(cntrl_payload + sizeof(struct CONTROL_SENDFILE));
     uint16_t file_name_len = payload_len - sizeof(struct CONTROL_SENDFILE);
     char * file_name = (char *)calloc(file_name_len, sizeof(char));
     char * file_data_payload = &_data_packet.payload[0];
@@ -213,7 +213,7 @@ void send_file(uint16_t payload_len, char * cntrl_payload)
     memcpy(&file_name, file_name_ptr, file_name_len);
 
     // Proccess header information
-    next_hop_fd = get_next_hop(ntohl(header.dest_ip_addr));
+    next_hop_fd = get_next_hop(header.dest_ip_addr);
     _data_packet.dest_ip_addr = header.dest_ip_addr;
     _data_packet.transfer_id = header.transfer_id;
     _data_packet.ttl = header.init_ttl;
@@ -238,21 +238,22 @@ void send_file(uint16_t payload_len, char * cntrl_payload)
                 // _data_packet_to_send is not EOF
                 sendALL(next_hop_fd, (char *)&_data_packet_to_send, sizeof(struct DATA));
                 update_data_record(&_data_packet_to_send);
-                new_transfer_record(_data_packet_to_send.transfer_id, _data_packet_to_send.ttl, _data_packet_to_send.seq_num);
+                new_transfer_record(_data_packet_to_send.transfer_id, _data_packet_to_send.ttl, ntohs(_data_packet_to_send.seq_num));
                 memset(file_data_payload, '\0', MAX_DATA_PAYLOAD);
-                _data_packet.seq_num++;
+                _data_packet.seq_num = ntohs(ntohs(_data_packet.seq_num) + 1);
             }
             else{
                 _data_packet.padding = DATA_FIN_FLAG_MASK;
                 sendALL(next_hop_fd, (char *)&_data_packet_to_send, sizeof(struct DATA));
                 update_data_record(&_data_packet_to_send);
-                new_transfer_record(_data_packet_to_send.transfer_id, _data_packet_to_send.ttl, _data_packet_to_send.seq_num);
+                new_transfer_record(_data_packet_to_send.transfer_id, _data_packet_to_send.ttl, ntohs(_data_packet_to_send.seq_num));
                 memset(file_data_payload, '\0', MAX_DATA_PAYLOAD);
                 break;
             }
             usleep(1500);
         }
     }
+    else printf("Open File Failed\n");
 
 
 
@@ -319,6 +320,24 @@ void new_transfer_record(uint8_t _transfer_id, uint8_t _ttl, uint16_t _seq_num)
     struct SeqRecord temp_seq = {0};
     temp_seq.seq_num = _seq_num;
     TAILQ_INSERT_TAIL(&temp->_seq, &temp_seq, next);
+}
+
+char * get_file_stats_payload(uint16_t _transfer_id)
+{
+    struct TransferRecord * _trecord = getExsitingTransfer(_transfer_id);
+
+    uint16_t seq_entry_num = 0;
+    struct SeqRecord * seq_rec;
+
+    // Find out how many seq_num record on file for this transfer id
+    TAILQ_FOREACH(seq_rec, &_trecord->_seq, next)
+        seq_entry_num++;
+
+
+
+    char * file_stats_payload = calloc((seq_entry_num*2 + 4), sizeof(uint8_t));
+
+    return file_stats_payload;
 }
 
 

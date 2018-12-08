@@ -222,7 +222,7 @@ void refresh_data_links()
             printf("Create new data link on %s\n", node_table[i].ip._ip_str);
             _data_socket = new_data_conn_client(node_table[i].ip._ip, node_table[i].raw_data.router_data_port);
             if(_data_socket < 0){
-                printf("Link creation failed with %s\n", node_table[i].ip._ip_str);
+                printf("Link creation failed with %s\n, error code: %d", node_table[i].ip._ip_str, (uint16_t)_data_socket);
                 // Link creation failed
                 node_table[i].link_status = FALSE;
                 node_table[i].fd = 0;
@@ -256,7 +256,11 @@ void udp_router_update(char * payload, uint16_t payload_len)
                 routeraddr.sin_addr.s_addr = node_table[i].ip._ip;
                 routeraddr.sin_port = htons(node_table[i].raw_data.router_router_port);
 
-                printf("Router upload payload: %s\n", payload);
+#ifdef DEBUG
+                printf("Router upload(to router %s)payload:\n", node_table[i].ip._ip_str);
+                payload_printer(payload_len, payload);
+                printf("\n");
+#endif
 
                 if(sendto(router_socket, payload, payload_len, 0, (struct sockaddr *)&routeraddr, sizeof(struct sockaddr_in)) != payload_len)
                 {

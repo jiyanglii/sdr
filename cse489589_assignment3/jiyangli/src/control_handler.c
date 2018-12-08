@@ -176,7 +176,7 @@ bool control_recv_hook(int sock_index)
         case 0x01:
             // INIT
             router_init(cntrl_payload);
-            init_response(sock_index, control_code);
+            control_response(sock_index, control_code);
             break;
 
 
@@ -187,7 +187,8 @@ bool control_recv_hook(int sock_index)
 
         case 0x03:
             // UPDATE
-            update_response(sock_index, control_code);
+            cost_update(cntrl_payload);
+            control_response(sock_index, control_code);
             break;
 
         case 0x04:
@@ -203,6 +204,7 @@ bool control_recv_hook(int sock_index)
 
         case 0x06:
             // SENDFILE-STATS
+            send_file_stats_response(cntrl_payload);
             break;
 
         case 0x07:
@@ -325,7 +327,7 @@ void send_prev_data(int sock_index, uint8_t _control_code)
     free(cntrl_response_header);
 }
 
-void init_response(int sock_index, uint8_t _control_code){
+void control_response(int sock_index, uint8_t _control_code){
 
     char *cntrl_response_header;
 
@@ -334,15 +336,17 @@ void init_response(int sock_index, uint8_t _control_code){
     free(cntrl_response_header);
 }
 
-void update_response(int sock_index, uint8_t _control_code){
 
-    char *cntrl_response_header;
+void send_file_stats_response(const char * _payload)
+{
+    uint8_t _transfer_id = *((uint8_t *)_payload);
 
-    cntrl_response_header = create_response_header(sock_index, _control_code, 0, 0);
-    sendALL(sock_index, cntrl_response_header, CNTRL_RESP_HEADER_SIZE);
-    free(cntrl_response_header);
+    char * file_stats_payload = get_file_stats_payload(_transfer_id);
+
+    free(file_stats_payload);
 }
 
-// void file_stats_response(){
 
-// }
+
+
+

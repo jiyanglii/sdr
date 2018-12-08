@@ -336,3 +336,27 @@ uint8_t new_data_link(uint32_t ip, int fd){
 
     return FALSE;
 }
+
+void cost_update(const char * _payload)
+{
+    struct COST_UPDATE new_cost = {0};
+
+    new_cost = *((struct COST_UPDATE *)_payload);
+
+    new_cost.router_id = (new_cost.router_id);
+    new_cost.cost = ntohs(new_cost.cost);
+
+    for(int i=0;i<active_node_num;i++)
+    {
+        if(node_table[i].raw_data.router_id == new_cost.router_id)
+        {
+            printf("Router %s now have now cost: %d\n", node_table[i].ip._ip_str, new_cost.cost);
+            node_table[i].cost_to = new_cost.cost;
+        }
+    }
+
+}
+
+
+
+
