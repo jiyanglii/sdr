@@ -428,11 +428,13 @@ void timer_timeout_handler()
             node_table[i]._timer.timer_pending = FALSE;
         }
         else if(node_table[i]._timer.timer_pending == TRUE){
+            printf("TIMEOUT detected! Router update %s\n", node_table[i].ip._ip_str);
             node_table[i]._timer.time_outs++;
             node_table[i]._timer.timer_pending = FALSE;
         }
 
         if((node_table[i]._timer.time_outs >= MAX_TIMEOUT_CT) && (node_table[i].self != TRUE)){
+            printf("Router update %s is missed for %d times, consider this router is offline.\n", node_table[i].ip._ip_str, MAX_TIMEOUT_CT);
             timerclear(&node_table[i]._timer.time_next);
             timerclear(&node_table[i]._timer.time_last);
             node_table[i]._timer.time_outs = 0;
