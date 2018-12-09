@@ -94,7 +94,11 @@ void processCMD(int cmd)
         payload_printer((_payload_len), (char *)_payload);
 
     }
-    if(cmd == 666){
+    else if(cmd == 9){
+        send_update_table();
+
+    }
+    else if(cmd == 666){
         exit(0);
     }
     // if (cmd == 1)

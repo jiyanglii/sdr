@@ -243,7 +243,7 @@ void refresh_data_links()
 }
 
 
-void udp_router_update(char * payload, uint16_t payload_len)
+void udp_router_update(const char * payload, uint16_t payload_len)
 {
     struct sockaddr_in routeraddr;
 
@@ -257,7 +257,7 @@ void udp_router_update(char * payload, uint16_t payload_len)
                 routeraddr.sin_port = htons(node_table[i].raw_data.router_router_port);
 
 #ifdef DEBUG
-                printf("Router upload(to router %s)payload:\n", node_table[i].ip._ip_str);
+                printf("Router update(to router %s)payload:\n", node_table[i].ip._ip_str);
                 payload_printer(payload_len, payload);
                 printf("\n");
 #endif
