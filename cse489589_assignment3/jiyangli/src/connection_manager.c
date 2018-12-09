@@ -127,7 +127,10 @@ void main_loop()
             }
         }
 
-        if(CRASH) exit(0);
+        if(CRASH) {
+            usleep(50000); // Add some delay to ensure the response is sent
+            exit(0);
+        }
     }
 }
 

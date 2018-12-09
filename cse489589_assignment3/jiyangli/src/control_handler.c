@@ -239,7 +239,7 @@ void crash(int sock_index, uint8_t _control_code){
     char *cntrl_response_header;
 
     cntrl_response_header = create_response_header(sock_index, _control_code, 0, 0);
-    sendALL(sock_index, cntrl_response_header, CNTRL_RESP_HEADER_SIZE);
+    if(sock_index>0) sendALL(sock_index, cntrl_response_header, CNTRL_RESP_HEADER_SIZE);
 
     // Stop self update timer
     for (int i = 0; i < active_node_num; ++i)
