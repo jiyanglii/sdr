@@ -278,12 +278,15 @@ void udp_router_update_recv(int udp_fd){
     char payload[MAX_ROUTING_UPDATE_PAYLOAD_SIZE] = {0};
     uint16_t payload_len = MAX_ROUTING_UPDATE_PAYLOAD_SIZE;
 
+    struct timeval time_now = {0};
+    timerclear(&time_now);
+
     char * payload_ptr = &payload[0];
 
     if(recvfrom(udp_fd, payload_ptr, payload_len, 0, (struct sockaddr *)&routeraddr, &sendsize) != payload_len)
     {
-        //Sendto failed
-        printf("UPD send failed!\n");;
+        //recvfrom failed
+        printf("UPD recieve failed!\n");;
     }
     else{
         // Update local routing table
@@ -293,9 +296,31 @@ void udp_router_update_recv(int udp_fd){
         for(int i=0;i<active_node_num;i++){
             if(routeraddr.sin_addr.s_addr == node_table[i].ip._ip){
 
-                gettimeofday(&(node_table[i]._timer.time_last), NULL);                                          // Save the current time
+                if( (   !timerisset(&(node_table[i]._timer.time_last)) &&
+                    (   !timerisset(&(node_table[i]._timer.ttl)))          )) // Recieve from this router 1st time
+                {
+                    printf("Recieving update from %s for the first time!\n", node_table[i].ip._ip_str);
+                    gettimeofday(&(node_table[i]._timer.time_last), NULL);
 
-                timeradd(&node_table[i]._timer.time_last, &router_update_ttl, &node_table[i]._timer.time_next); // Calculates the expected next update arrival time
+                }
+                else if(timerisset(&(node_table[i]._timer.time_last)) && (!timerisset(&(node_table[i]._timer.ttl)))) // Recieve from this router 2st time, calculate the TTL for this router
+                {
+
+                    printf("Recieving update from %s for the second time, calculating new TTL!\n", node_table[i].ip._ip_str);
+                    gettimeofday(&time_now, NULL);
+                    timersub(&time_now, &node_table[i]._timer.time_last, &node_table[i]._timer.ttl);
+                    printf("Router %s now have TTL: %d sec, %d usec!\n", (uint32_t)node_table[i]._timer.ttl.tv_sec, (uint32_t)node_table[i]._timer.ttl.tv_usec);
+
+                    // Relax the ttl req for a bit
+                    struct timeval delay = {0, 30000};
+                    timeradd(&delay, &node_table[i]._timer.ttl, &node_table[i]._timer.ttl);
+                    printf("Router %s now have RELAXED TTL: %d sec, %d usec!\n", (uint32_t)node_table[i]._timer.ttl.tv_sec, (uint32_t)node_table[i]._timer.ttl.tv_usec);
+                }
+                else
+                {
+                    gettimeofday(&(node_table[i]._timer.time_last), NULL);                                                  // Save the current time
+                    timeradd(&node_table[i]._timer.time_last, &node_table[i]._timer.ttl, &node_table[i]._timer.time_next);  // Calculates the expected next update arrival time
+                }
 
                 node_table[i]._timer.time_outs = 0;
                 node_table[i]._timer.timer_pending = FALSE;
