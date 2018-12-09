@@ -199,7 +199,7 @@ void send_update_table(void)
     udp_router_update(table_response, payload_len);
 }
 
-void BellmanFord_alg(char * update_packet){
+void BellmanFord_alg(const char * update_packet){
 
     struct ROUTING_UPDATE_HEADER header;
     struct ROUTING_UPDATE router_info[MAX_NODE_NUM];
@@ -216,6 +216,8 @@ void BellmanFord_alg(char * update_packet){
     uint32_t source_ip = ntohl(header.source_router_ip);
 
 #ifdef DEBUG
+    printf("BellmanFord_alg:\n");
+    printf("header.router_num%x\n", header.router_num);
     printf("Incoming routing table update payload from %x:\n", source_ip);
     payload_printer(update_fields*sizeof(struct ROUTING_UPDATE), ptr);
     printf("\n");
