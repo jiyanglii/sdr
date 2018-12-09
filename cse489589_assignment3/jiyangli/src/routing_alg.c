@@ -165,14 +165,15 @@ void send_update_table(void)
     struct   ROUTING_UPDATE_HEADER local_update_header = {0};
     uint16_t payload_len = 0;;
     char     *table_response = (char *) malloc(MAX_ROUTING_UPDATE_PAYLOAD_SIZE);
+    char     *ptr = table_response;
 
 
     local_update_header.router_num = htons(active_node_num);
     local_update_header.source_router_port = htons(local_node_info->raw_data.router_router_port);
     local_update_header.source_router_ip   = (local_node_info->ip._ip);
 
-    memcpy(table_response, (char *)&local_update_header, sizeof(struct ROUTING_UPDATE_HEADER));
-    table_response += sizeof(struct ROUTING_UPDATE_HEADER);
+    memcpy(ptr, (char *)&local_update_header, sizeof(struct ROUTING_UPDATE_HEADER));
+    ptr += sizeof(struct ROUTING_UPDATE_HEADER);
     payload_len += sizeof(struct ROUTING_UPDATE_HEADER);
 
 
@@ -184,8 +185,8 @@ void send_update_table(void)
         local_update_info.router_id   = node_table[i].raw_data.router_id;
         local_update_info.router_cost = htons(node_table[i].cost_to);
 
-        memcpy(table_response, (char *)&local_update_info, sizeof(struct ROUTING_UPDATE));
-        table_response += sizeof(struct ROUTING_UPDATE);
+        memcpy(ptr, (char *)&local_update_info, sizeof(struct ROUTING_UPDATE));
+        ptr += sizeof(struct ROUTING_UPDATE);
         payload_len += sizeof(struct ROUTING_UPDATE);
     }
 
