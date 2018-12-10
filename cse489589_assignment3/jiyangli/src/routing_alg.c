@@ -243,7 +243,7 @@ void BellmanFord_alg(const char * update_packet){
         {
             for (int j = 0; j < update_fields; j++)
             {
-                if (router_info[j].router_ip == node_table[i].raw_data.router_ip)
+                if ((router_info[j].router_ip == node_table[i].raw_data.router_ip) && (router_info[j].router_cost != UINT16_MAX))
                 {
                     temp = base_cost + ntohs(router_info[j].router_cost);
                     if (temp < node_table[i].cost_to)
