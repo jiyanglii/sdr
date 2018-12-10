@@ -194,7 +194,6 @@ bool control_recv_hook(int sock_index)
         case 0x04:
             // CRASH
             crash(sock_index, control_code);
-            usleep(500000);
             break;
 
         case 0x05:
