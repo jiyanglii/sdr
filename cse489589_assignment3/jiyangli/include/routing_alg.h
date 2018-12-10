@@ -63,9 +63,9 @@ struct ROUTER_INFO
     bool self;
     bool neighbor;
     bool link_status;
-    int fd;             // This is the FD when self is Client, I connect() others
+    int fd;             // This is the FD when self is Client, I connect() others --- Used to send data
     bool link_status_s;
-    int fd_s;           // This is the FD when self is Server, others connect() me
+    int fd_s;           // This is the FD when self is Server, others connect() me -- Used to recieve data
 
     // Routing related
     uint16_t cost_to;
@@ -78,7 +78,7 @@ struct ROUTER_INFO
 
 void GetPrimaryIP(struct IPV4_ADDR * local_ip);
 int get_next_hop(uint32_t dest_ip);
-uint8_t new_data_link(uint32_t ip, int fd);
+uint8_t new_recv_data_link(uint32_t ip, int fd);
 void BellmanFord_alg(const char * update_packet);
 void send_update_table(void);
 void cost_update(const char * _payload);

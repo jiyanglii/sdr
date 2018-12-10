@@ -203,7 +203,7 @@ void BellmanFord_alg(const char * update_packet){
 
     struct ROUTING_UPDATE_HEADER header;
     struct ROUTING_UPDATE router_info[MAX_NODE_NUM];
-    char * ptr = update_packet;
+    char * ptr = (char *)update_packet;
     int    base_cost;
     int    temp;
     int    source_id;
@@ -318,6 +318,7 @@ int get_next_hop(uint32_t dest_ip)
 
     for(int i=0;i<active_node_num;i++){
         if(node_table[i].raw_data.router_id == next_hop_id){
+            new_send_data_link(node_table[i].ip._ip);
             return node_table[i].fd;
         }
     }
@@ -325,7 +326,7 @@ int get_next_hop(uint32_t dest_ip)
     return 0;
 }
 
-uint8_t new_data_link(uint32_t ip, int fd){
+uint8_t new_recv_data_link(uint32_t ip, int fd){
     for(int i=0;i<active_node_num;i++){
         if(node_table[i].ip._ip == ip){
             if(node_table[i].fd_s < 0)

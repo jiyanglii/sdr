@@ -92,7 +92,7 @@ int new_data_conn(int sock_index)
         ERROR("accept() failed");
     }
     else{
-        new_data_link(remote_controller_addr.sin_addr.s_addr, fdaccept);
+        new_recv_data_link(remote_controller_addr.sin_addr.s_addr, fdaccept);
 
 
         /* Insert into list of active control connections*/
@@ -197,7 +197,6 @@ bool data_recv_hook(int sock_index)
 
 void send_file(uint16_t payload_len,const char * cntrl_payload)
 {
-    refresh_data_links();
 
     int next_hop_fd = 0;
     struct CONTROL_SENDFILE header = {0};
