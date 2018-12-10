@@ -204,20 +204,20 @@ void BellmanFord_alg(const char * update_packet){
     struct ROUTING_UPDATE_HEADER header;
     struct ROUTING_UPDATE router_info[MAX_NODE_NUM];
     char * ptr = (char *)update_packet;
-    int    base_cost;
-    int    temp;
-    int    source_id;
+    uint16_t    base_cost = 0;
+    uint16_t    temp = 0;
+    uint16_t    source_id = 0;
 
 
     header = *((struct ROUTING_UPDATE_HEADER *)ptr);
     ptr += sizeof(struct CONTROL_INIT_HEADER);
 
     uint16_t update_fields = ntohs(header.router_num);
-    uint32_t source_ip = ntohl(header.source_router_ip);
+    uint32_t source_ip = (header.source_router_ip);
 
 #ifdef DEBUG
     printf("BellmanFord_alg:\n");
-    printf("header.router_num%x\n", header.router_num);
+    printf("update_fields %x (%d)\n", update_fields, (uint16_t)update_fields);
     printf("Incoming routing table update payload from %x:\n", source_ip);
     payload_printer(update_fields*sizeof(struct ROUTING_UPDATE), ptr);
     printf("\n");
