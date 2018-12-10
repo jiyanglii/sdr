@@ -65,6 +65,9 @@ void processCMD(int cmd)
     else if(cmd == 2){
         routing_table_response(0,2);
     }
+    else if(cmd == 4){
+        crash(0,4);
+    }
     else if(cmd == 6){
         // Auto generate file stats
         // Create 3 transfer records

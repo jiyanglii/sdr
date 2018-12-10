@@ -127,7 +127,10 @@ void main_loop()
             }
         }
 
-        if(CRASH) exit(0);
+        if(CRASH) {
+            usleep(50000); // Add some delay to ensure the response is sent
+            exit(0);
+        }
     }
 }
 
@@ -242,6 +245,36 @@ void refresh_data_links()
     }
 }
 
+void new_send_data_link(uint32_t ip)
+{
+
+    int _data_socket = -1;
+
+    for(int i=0;i<active_node_num;i++){
+        if((node_table[i].ip._ip == ip) && (node_table[i].link_status == FALSE) && (node_table[i].self == FALSE) && (node_table[i].neighbor == TRUE)){
+
+            printf("Create new data link with %s\n", node_table[i].ip._ip_str);
+            _data_socket = new_data_conn_client(node_table[i].ip._ip, node_table[i].raw_data.router_data_port);
+            if(_data_socket < 0){
+                printf("Link creation failed with %s\n, error code: %d", node_table[i].ip._ip_str, (uint16_t)_data_socket);
+                // Link creation failed
+                node_table[i].link_status = FALSE;
+                node_table[i].fd = 0;
+            }
+            else
+            {
+                printf("New data link with neigbour is created!\n");
+                // On success, update DATA_LINK list and node_info list
+                node_table[i].link_status = TRUE;
+                node_table[i].fd = _data_socket;
+                /* Add to watched socket list */
+                FD_SET(_data_socket, &master_list);
+                if(_data_socket > head_fd) head_fd = _data_socket;
+            }
+        } else if((node_table[i].ip._ip == ip) && (node_table[i].link_status == TRUE) && (node_table[i].self == FALSE) && (node_table[i].neighbor == TRUE))
+            printf("The TCP link to %s is alrready up.\n", node_table[i].ip._ip_str);
+    }
+}
 
 void udp_router_update(const char * payload, uint16_t payload_len)
 {
@@ -278,12 +311,15 @@ void udp_router_update_recv(int udp_fd){
     char payload[MAX_ROUTING_UPDATE_PAYLOAD_SIZE] = {0};
     uint16_t payload_len = MAX_ROUTING_UPDATE_PAYLOAD_SIZE;
 
+    struct timeval time_now = {0};
+    timerclear(&time_now);
+
     char * payload_ptr = &payload[0];
 
     if(recvfrom(udp_fd, payload_ptr, payload_len, 0, (struct sockaddr *)&routeraddr, &sendsize) != payload_len)
     {
-        //Sendto failed
-        printf("UPD send failed!\n");;
+        //recvfrom failed
+        printf("UPD recieve failed!\n");;
     }
     else{
         // Update local routing table
@@ -293,9 +329,31 @@ void udp_router_update_recv(int udp_fd){
         for(int i=0;i<active_node_num;i++){
             if(routeraddr.sin_addr.s_addr == node_table[i].ip._ip){
 
-                gettimeofday(&(node_table[i]._timer.time_last), NULL);                                          // Save the current time
+                if( (   !timerisset(&(node_table[i]._timer.time_last)) &&
+                    (   !timerisset(&(node_table[i]._timer.ttl)))          )) // Recieve from this router 1st time
+                {
+                    printf("Recieving update from %s for the first time!\n", node_table[i].ip._ip_str);
+                    gettimeofday(&(node_table[i]._timer.time_last), NULL);
 
-                timeradd(&node_table[i]._timer.time_last, &router_update_ttl, &node_table[i]._timer.time_next); // Calculates the expected next update arrival time
+                }
+                else if(timerisset(&(node_table[i]._timer.time_last)) && (!timerisset(&(node_table[i]._timer.ttl)))) // Recieve from this router 2st time, calculate the TTL for this router
+                {
+
+                    printf("Recieving update from %s for the second time, calculating new TTL!\n", node_table[i].ip._ip_str);
+                    gettimeofday(&time_now, NULL);
+                    timersub(&time_now, &node_table[i]._timer.time_last, &node_table[i]._timer.ttl);
+                    printf("Router %s now have TTL: %d sec, %d usec!\n", (uint32_t)node_table[i]._timer.ttl.tv_sec, (uint32_t)node_table[i]._timer.ttl.tv_usec);
+
+                    // Relax the ttl req for a bit
+                    struct timeval delay = {0, 30000};
+                    timeradd(&delay, &node_table[i]._timer.ttl, &node_table[i]._timer.ttl);
+                    printf("Router %s now have RELAXED TTL: %d sec, %d usec!\n", (uint32_t)node_table[i]._timer.ttl.tv_sec, (uint32_t)node_table[i]._timer.ttl.tv_usec);
+                }
+                else
+                {
+                    gettimeofday(&(node_table[i]._timer.time_last), NULL);                                                  // Save the current time
+                    timeradd(&node_table[i]._timer.time_last, &node_table[i]._timer.ttl, &node_table[i]._timer.time_next);  // Calculates the expected next update arrival time
+                }
 
                 node_table[i]._timer.time_outs = 0;
                 node_table[i]._timer.timer_pending = FALSE;
@@ -403,11 +461,13 @@ void timer_timeout_handler()
             node_table[i]._timer.timer_pending = FALSE;
         }
         else if(node_table[i]._timer.timer_pending == TRUE){
+            printf("TIMEOUT detected! Router update %s\n", node_table[i].ip._ip_str);
             node_table[i]._timer.time_outs++;
             node_table[i]._timer.timer_pending = FALSE;
         }
 
         if((node_table[i]._timer.time_outs >= MAX_TIMEOUT_CT) && (node_table[i].self != TRUE)){
+            printf("Router update %s is missed for %d times, consider this router is offline.\n", node_table[i].ip._ip_str, MAX_TIMEOUT_CT);
             timerclear(&node_table[i]._timer.time_next);
             timerclear(&node_table[i]._timer.time_last);
             node_table[i]._timer.time_outs = 0;

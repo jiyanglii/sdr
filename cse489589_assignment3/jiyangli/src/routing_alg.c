@@ -106,7 +106,7 @@ void router_init(char* init_payload){
         ptr += sizeof(struct CONTROL_INIT_ROUTER_INFO);
 
         node_table[i].next_hop_router_id = UINT16_MAX;
-        node_table[i].cost_to = (node_table[i].raw_data.router_cost);
+        node_table[i].cost_to = ntohs(node_table[i].raw_data.router_cost);
 
         if((node_table[i].ip._ip == local_ip._ip) && (node_table[i].cost_to == 0))
         {
@@ -199,23 +199,25 @@ void send_update_table(void)
     udp_router_update(table_response, payload_len);
 }
 
-void BellmanFord_alg(char * update_packet){
+void BellmanFord_alg(const char * update_packet){
 
     struct ROUTING_UPDATE_HEADER header;
     struct ROUTING_UPDATE router_info[MAX_NODE_NUM];
-    char * ptr = update_packet;
-    int    base_cost;
-    int    temp;
-    int    source_id;
+    char * ptr = (char *)update_packet;
+    uint16_t    base_cost = 0;
+    uint16_t    temp = 0;
+    uint16_t    source_id = 0;
 
 
     header = *((struct ROUTING_UPDATE_HEADER *)ptr);
     ptr += sizeof(struct CONTROL_INIT_HEADER);
 
     uint16_t update_fields = ntohs(header.router_num);
-    uint32_t source_ip = ntohl(header.source_router_ip);
+    uint32_t source_ip = (header.source_router_ip);
 
 #ifdef DEBUG
+    printf("BellmanFord_alg:\n");
+    printf("update_fields %x (%d)\n", update_fields, (uint16_t)update_fields);
     printf("Incoming routing table update payload from %x:\n", source_ip);
     payload_printer(update_fields*sizeof(struct ROUTING_UPDATE), ptr);
     printf("\n");
@@ -243,7 +245,7 @@ void BellmanFord_alg(char * update_packet){
             {
                 if (router_info[j].router_ip == node_table[i].raw_data.router_ip)
                 {
-                    temp = base_cost + router_info[j].router_cost;
+                    temp = base_cost + ntohs(router_info[j].router_cost);
                     if (temp < node_table[i].cost_to)
                     {
                         node_table[i].cost_to = temp;
@@ -316,6 +318,7 @@ int get_next_hop(uint32_t dest_ip)
 
     for(int i=0;i<active_node_num;i++){
         if(node_table[i].raw_data.router_id == next_hop_id){
+            new_send_data_link(node_table[i].ip._ip);
             return node_table[i].fd;
         }
     }
@@ -323,7 +326,7 @@ int get_next_hop(uint32_t dest_ip)
     return 0;
 }
 
-uint8_t new_data_link(uint32_t ip, int fd){
+uint8_t new_recv_data_link(uint32_t ip, int fd){
     for(int i=0;i<active_node_num;i++){
         if(node_table[i].ip._ip == ip){
             if(node_table[i].fd_s < 0)
@@ -351,7 +354,7 @@ void cost_update(const char * _payload)
     {
         if(node_table[i].raw_data.router_id == new_cost.router_id)
         {
-            printf("Router %s now have now cost: %d\n", node_table[i].ip._ip_str, new_cost.cost);
+            printf("Router %s now have new cost: %x\n, changed from %x", node_table[i].ip._ip_str, new_cost.cost, node_table[i].cost_to);
             node_table[i].cost_to = new_cost.cost;
         }
     }
