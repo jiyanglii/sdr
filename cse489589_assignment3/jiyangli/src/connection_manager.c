@@ -128,6 +128,10 @@ void main_loop()
         }
 
         if(CRASH) {
+            usleep(500000);
+            for(sock_index=0; sock_index<=head_fd; sock_index+=1){
+                close(sock_index);
+            }
             usleep(50000); // Add some delay to ensure the response is sent
             exit(0);
         }

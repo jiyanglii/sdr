@@ -194,6 +194,7 @@ bool control_recv_hook(int sock_index)
         case 0x04:
             // CRASH
             crash(sock_index, control_code);
+            usleep(500000);
             break;
 
         case 0x05:
@@ -219,13 +220,6 @@ bool control_recv_hook(int sock_index)
 
         default:    break;
 
-        /* .......
-        case 1: init_response(sock_index, cntrl_payload);
-                break;
-
-            .........
-           .......
-         ......*/
     }
 
     if(payload_len != 0) free(cntrl_payload);
@@ -242,7 +236,7 @@ void crash(int sock_index, uint8_t _control_code){
     if(sock_index>0) sendALL(sock_index, cntrl_response_header, CNTRL_RESP_HEADER_SIZE);
 
     // Stop self update timer
-    for (int i = 0; i < active_node_num; ++i)
+    for (int i = 0; i < active_node_num; i++)
     {
         if(node_table[i].self == TRUE){
             timerclear(&node_table[i]._timer.time_last);
@@ -264,7 +258,7 @@ void routing_table_response(int sock_index, uint8_t _control_code){
     {
         cntrl_routing_table[i].router_id   = node_table[i].raw_data.router_id;
         cntrl_routing_table[i].next_hop_id = node_table[i].next_hop_router_id;
-        cntrl_routing_table[i].router_cost = node_table[i].cost_to;
+        cntrl_routing_table[i].router_cost = ntohs(node_table[i].cost_to);
     }
 
     payload_len = active_node_num * sizeof(struct CONTROL_ROUTING_TABLE);

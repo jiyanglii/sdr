@@ -237,11 +237,11 @@ void BellmanFord_alg(const char * update_packet){
     }
 
     // update routing table of node_table
-    for (int i = 0; i < MAX_NODE_NUM; ++i)
+    for (int i = 0; i < MAX_NODE_NUM; i++)
     {
         if ((node_table[i].self == FALSE) && (source_id != node_table[i].raw_data.router_id))
         {
-            for (int j = 0; j < update_fields; ++j)
+            for (int j = 0; j < update_fields; j++)
             {
                 if (router_info[j].router_ip == node_table[i].raw_data.router_ip)
                 {
@@ -270,7 +270,7 @@ void router_update(char* update_payload){
 
     cntrl_update = *((struct CONTROL_UPDATE *)ptr);
 
-    for (int i = 0; i < MAX_NODE_NUM; ++i)
+    for (int i = 0; i < MAX_NODE_NUM; i++)
     {
         if (node_table[i].raw_data.router_id == cntrl_update.router_id)
         {

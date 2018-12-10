@@ -56,10 +56,13 @@ struct ROUTER_UPDATE_TIMER
     struct timeval ttl;         // Unique ttl for this router
 };
 
+//  Network ------  Big Endian
+//  Host    ------  Little Endian
+
 struct ROUTER_INFO
 {
     struct CONTROL_INIT_ROUTER_INFO raw_data;
-    struct IPV4_ADDR ip;
+    struct IPV4_ADDR ip;                        // Network
     bool self;
     bool neighbor;
     bool link_status;
@@ -68,8 +71,8 @@ struct ROUTER_INFO
     int fd_s;           // This is the FD when self is Server, others connect() me -- Used to recieve data
 
     // Routing related
-    uint16_t cost_to;
-    uint16_t next_hop_router_id;
+    uint16_t cost_to;                           // Host
+    uint16_t next_hop_router_id;                // Network
 
     struct ROUTER_UPDATE_TIMER _timer;
 };
