@@ -106,7 +106,7 @@ void router_init(char* init_payload){
         ptr += sizeof(struct CONTROL_INIT_ROUTER_INFO);
 
         node_table[i].next_hop_router_id = UINT16_MAX;
-        node_table[i].cost_to = (node_table[i].raw_data.router_cost);
+        node_table[i].cost_to = ntohs(node_table[i].raw_data.router_cost);
 
         if((node_table[i].ip._ip == local_ip._ip) && (node_table[i].cost_to == 0))
         {
@@ -245,7 +245,7 @@ void BellmanFord_alg(const char * update_packet){
             {
                 if (router_info[j].router_ip == node_table[i].raw_data.router_ip)
                 {
-                    temp = base_cost + router_info[j].router_cost;
+                    temp = base_cost + ntohs(router_info[j].router_cost);
                     if (temp < node_table[i].cost_to)
                     {
                         node_table[i].cost_to = temp;
@@ -354,7 +354,7 @@ void cost_update(const char * _payload)
     {
         if(node_table[i].raw_data.router_id == new_cost.router_id)
         {
-            printf("Router %s now have now cost: %d\n", node_table[i].ip._ip_str, new_cost.cost);
+            printf("Router %s now have new cost: %x\n, changed from %x", node_table[i].ip._ip_str, new_cost.cost, node_table[i].cost_to);
             node_table[i].cost_to = new_cost.cost;
         }
     }
