@@ -38,6 +38,11 @@ uint16_t test_init_payload[] = {       0x0200, 0x0600,
                                     0x80cd,   0x2424,
                             };
 
+uint8_t test_send_file[] = {    0x80, 0xcd, 0x24, 0x21, // dest ip
+                                0x04,                   // init ttl
+                                0x37,                   // transfer id
+                                0x00, 0x18,             // init seq
+                                0x74, 0x65, 0x73, 0x74, 0x66, 0x69, 0x6c, 0x65, 0x31};
 
 uint16_t init_set = FALSE;
 
@@ -67,6 +72,9 @@ void processCMD(int cmd)
     }
     else if(cmd == 4){
         crash(0,4);
+    }
+    else if(cmd == 5){
+        send_file(sizeof(test_send_file), (char *)&test_send_file[0]);
     }
     else if(cmd == 6){
         // Auto generate file stats
