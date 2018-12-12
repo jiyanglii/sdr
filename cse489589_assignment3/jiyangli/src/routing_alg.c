@@ -88,6 +88,12 @@ void router_init(char* init_payload){
 #endif
 
     for(int i=0;i<active_node_num;i++){
+        node_table[i]._timer.timer_pending = FALSE;
+        node_table[i]._timer.time_outs = 0;
+        timerclear(&node_table[i]._timer.time_next);
+        timerclear(&node_table[i]._timer.time_last);
+        timerclear(&node_table[i]._timer.ttl);
+
         node_table[i].raw_data = *((struct CONTROL_INIT_ROUTER_INFO *)ptr);
 
 #ifdef DEBUG
@@ -251,8 +257,8 @@ void BellmanFord_alg(const char * update_packet){
     for (int i = 0; i < MAX_NODE_NUM; i++)
     {
         for (int j = 0; j < update_fields; j++)
-        {                
-            if ((router_info[j].router_ip == node_table[i].raw_data.router_ip) && (router_info[j].router_cost != UINT16_MAX))
+        {
+            if (router_info[j].router_ip == node_table[i].raw_data.router_ip)
               {
                 temp = base_cost + ntohs(router_info[j].router_cost);
                 if (temp < node_table[i].cost_to)

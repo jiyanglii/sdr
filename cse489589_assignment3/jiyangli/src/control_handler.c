@@ -199,8 +199,8 @@ bool control_recv_hook(int sock_index)
 
         case 0x05:
             // SENDFILE
-            send_file(payload_len, cntrl_payload);
             send_file_resp(sock_index, control_code);
+            send_file(payload_len, cntrl_payload);
             break;
 
         case 0x06:
