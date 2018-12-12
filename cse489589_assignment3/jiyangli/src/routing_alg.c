@@ -219,7 +219,7 @@ void BellmanFord_alg(const char * update_packet){
 
 
     header = *((struct ROUTING_UPDATE_HEADER *)ptr);
-    ptr += sizeof(struct CONTROL_INIT_HEADER);
+    ptr += sizeof(struct ROUTING_UPDATE_HEADER);
 
     uint16_t update_fields = ntohs(header.router_num);
     uint32_t source_ip = (header.source_router_ip);
@@ -232,34 +232,43 @@ void BellmanFord_alg(const char * update_packet){
     printf("\n");
 #endif
 
+    uint16_t sourseid = 0;
     for(int i=0;i<update_fields;i++){
         router_info[i] = *((struct ROUTING_UPDATE *)ptr);
         ptr += sizeof(struct ROUTING_UPDATE);
+
+        if(router_info[i].router_cost == 0)
+        { sourseid = router_info[i].router_id;}
     }
 
     for(int i=0;i<MAX_NODE_NUM;i++){
-        if (node_table[i].raw_data.router_ip == source_ip)
+        if (node_table[i].raw_data.router_id == sourseid)
         {
             base_cost = node_table[i].cost_to;
             source_id = node_table[i].raw_data.router_id;
         }
     }
 
-    printf("Update from neighbour:%d with old cost%d\n", source_id,base_cost);
+    printf("Update from neighbour:%x with old cost%d\n", source_id,base_cost);
 
     // update routing table of node_table
     for (int i = 0; i < MAX_NODE_NUM; i++)
+        //printf("+++++ node_table[%d] = \n", i, node_table[i].raw_data.router_id);
     {
+         printf("+++++ node_table[%d] = %x\n", i, node_table[i].raw_data.router_id);
         for (int j = 0; j < update_fields; j++)
         {                
-            if ((router_info[j].router_ip == node_table[i].raw_data.router_ip) && (router_info[j].router_cost != UINT16_MAX))
+             printf("---- router_info[%d] = %x\n", j, router_info[j].router_id);
+            if ((router_info[j].router_id == node_table[i].raw_data.router_id))
               {
-                temp = base_cost + ntohs(router_info[j].router_cost);
+                if(router_info[j].router_cost != UINT16_MAX)
+                    temp = base_cost + ntohs(router_info[j].router_cost);
+                printf("Temp %x, base_cost %x, old cost%x\n", temp, base_cost, ntohs(router_info[j].router_cost));
                 if (temp < node_table[i].cost_to)
                 {
-                    printf("Updated new cost:%d to neighbour:%d\n",temp, source_id);
+                    printf("Updated new cost:%d to neighbour:%d\n",temp, sourseid);
                     node_table[i].cost_to = temp;
-                    node_table[i].next_hop_router_id = source_id;
+                    node_table[i].next_hop_router_id = sourseid;
                 }
             }
 
@@ -268,7 +277,6 @@ void BellmanFord_alg(const char * update_packet){
     }
 
 }
-
 
 void router_update(char* update_payload){
 
