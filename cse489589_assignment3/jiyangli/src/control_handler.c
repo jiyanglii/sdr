@@ -339,23 +339,32 @@ void send_file_stats_response(int sock_index, uint8_t _control_code, const char 
     uint16_t _payload_len = 0;
 
     char * file_stats_payload = get_file_stats_payload(_transfer_id);
-    _payload_len = *((uint16_t *)(_payload + 2));
+    if(file_stats_payload){
 
-    // Recover the padding to 0
-    *((uint16_t *)(_payload + 2)) = 0x0000;
+        _payload_len = *((uint16_t *)(_payload + 2));
 
-    cntrl_response_header = create_response_header(sock_index, _control_code, 0, 0);
+        // Recover the padding to 0
+        *((uint16_t *)(_payload + 2)) = 0x0000;
 
-    cntrl_response = calloc((CNTRL_RESP_HEADER_SIZE + _payload_len),sizeof(char));
-    memcpy(cntrl_response, cntrl_response_header, CNTRL_RESP_HEADER_SIZE);
-    memcpy((cntrl_response + CNTRL_RESP_HEADER_SIZE), file_stats_payload, _payload_len);
+        cntrl_response_header = create_response_header(sock_index, _control_code, 0, _payload_len);
+
+        cntrl_response = calloc((CNTRL_RESP_HEADER_SIZE + _payload_len),sizeof(char));
+        memcpy(cntrl_response, cntrl_response_header, CNTRL_RESP_HEADER_SIZE);
+        memcpy((cntrl_response + CNTRL_RESP_HEADER_SIZE), file_stats_payload, _payload_len);
+
+        sendALL(sock_index, cntrl_response, (CNTRL_RESP_HEADER_SIZE + _payload_len));
+
+        free(cntrl_response);
+        free(cntrl_response_header);
+        free(file_stats_payload);
+    }
+    else{
+        cntrl_response_header = create_response_header(sock_index, _control_code, 1, 0);
+        sendALL(sock_index, cntrl_response_header, CNTRL_RESP_HEADER_SIZE);
+        free(cntrl_response_header);
+    }
 
 
-    sendALL(sock_index, cntrl_response, (CNTRL_RESP_HEADER_SIZE + _payload_len));
-
-    free(cntrl_response);
-    free(cntrl_response_header);
-    free(file_stats_payload);
 }
 
 

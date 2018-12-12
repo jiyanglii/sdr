@@ -96,30 +96,38 @@ void processCMD(int cmd)
     else if(cmd == 66){
         // Auto generate file stats
         // Create 3 transfer records
-        new_transfer_record(0xaa,0x55,0x0000);
+        //new_transfer_record(0xaa,0x55,0x0000);
         new_transfer_record(0xbb,0x66,0x1000);
         new_transfer_record(0xcc,0x77,0x2000);
 
         for(int i=0;i<20;i++)
         {
             // add 20 new records for each file
-            new_transfer_record(0xaa,(0x55-i),(0x0000+i));
+            //new_transfer_record(0xaa,(0x55-i),(0x0000+i));
             new_transfer_record(0xbb,(0x66-i*2),(0x1000+i*2));
             new_transfer_record(0xcc,(0x77-i*3),(0x2000+i*3));
         }
 
         // Get filestats payload
         char * _payload = get_file_stats_payload(0xbb);
-        uint16_t _payload_len = *((uint16_t *)(_payload + 2));
-        payload_printer((_payload_len), (char *)_payload);
+        if(_payload) {
+            uint16_t _payload_len = *((uint16_t *)(_payload + 2));
+            payload_printer((_payload_len), (char *)_payload);
+        }
+
 
         _payload = get_file_stats_payload(0xaa);
-        _payload_len = *((uint16_t *)(_payload + 2));
-        payload_printer((_payload_len), (char *)_payload);
+        if(_payload) {
+            uint16_t _payload_len = *((uint16_t *)(_payload + 2));
+            payload_printer((_payload_len), (char *)_payload);
+        }
+
 
         _payload = get_file_stats_payload(0xcc);
-        _payload_len = *((uint16_t *)(_payload + 2));
-        payload_printer((_payload_len), (char *)_payload);
+        if(_payload) {
+            uint16_t _payload_len = *((uint16_t *)(_payload + 2));
+            payload_printer((_payload_len), (char *)_payload);
+        }
 
     }
     else if(cmd == 9){

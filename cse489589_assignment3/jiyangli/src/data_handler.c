@@ -187,9 +187,9 @@ bool data_recv_hook(int sock_index)
     else{
         // Forwarding incoming data to next hop... here
         printf("Forwarding incoming data to next hop...n");
-        next_hop_fd = get_next_hop(ntohl(_data.dest_ip_addr));
+        next_hop_fd = get_next_hop(_data.dest_ip_addr);
 
-        if(_data.ttl>0){
+        if((_data.ttl>0) && (next_hop_fd>0)){
             sendALL(next_hop_fd, (char *)&_data, sizeof(struct DATA));
             update_data_record(&_data);
             new_transfer_record(_data.transfer_id, _data.ttl, _data.seq_num);
@@ -362,6 +362,8 @@ void new_transfer_record(uint8_t _transfer_id, uint8_t _ttl, uint16_t _seq_num)
 char * get_file_stats_payload(uint16_t _transfer_id)
 {
     struct TransferRecord * _trecord = getExsitingTransfer(_transfer_id);
+
+    if(!_trecord) return NULL;
 
     uint16_t seq_entry_num = 0;
     struct SeqRecord * seq_rec;
