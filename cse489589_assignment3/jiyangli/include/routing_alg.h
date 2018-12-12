@@ -54,6 +54,7 @@ struct ROUTER_UPDATE_TIMER
     struct timeval time_next;   // The expected time for the next update
 
     struct timeval ttl;         // Unique ttl for this router
+    struct timeval timeout_ttl;
 };
 
 //  Network ------  Big Endian

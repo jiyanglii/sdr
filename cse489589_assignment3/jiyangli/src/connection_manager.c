@@ -103,7 +103,7 @@ void main_loop()
 #endif
                     /* router_socket */
                     else if(sock_index == router_socket){
-                            //call handler that will call recvfrom() .....
+                        //call handler that will call recvfrom() .....
                         udp_router_update_recv(sock_index);
                     }
 
@@ -352,15 +352,24 @@ void udp_router_update_recv(int udp_fd){
                     timersub(&time_now, &node_table[i]._timer.time_last, &node_table[i]._timer.ttl);
                     printf("Router %s now have TTL: %d sec, %d usec!\n", node_table[i].ip._ip_str, (uint32_t)node_table[i]._timer.ttl.tv_sec, (uint32_t)node_table[i]._timer.ttl.tv_usec);
 
+                    // Calculate the timeout ttl
+                    timerclear(&node_table[i]._timer.timeout_ttl);
+                    for(int k=0;k<MAX_TIMEOUT_CT;k++)
+                    {
+                        timeradd(&node_table[i]._timer.ttl, &node_table[i]._timer.timeout_ttl, &node_table[i]._timer.timeout_ttl);
+                    }
+
+                    printf("This router times out for every %d sec and %d usec.\n", node_table[i]._timer.timeout_ttl.tv_sec, node_table[i]._timer.timeout_ttl.tv_usec);
+
                     // Relax the ttl req for a bit
                     struct timeval delay = {0, 30000};
-                    timeradd(&delay, &node_table[i]._timer.ttl, &node_table[i]._timer.ttl);
-                    printf("Router %s now have RELAXED TTL: %d sec, %d usec!\n", node_table[i].ip._ip_str, (uint32_t)node_table[i]._timer.ttl.tv_sec, (uint32_t)node_table[i]._timer.ttl.tv_usec);
+                    timeradd(&delay, &node_table[i]._timer.timeout_ttl, &node_table[i]._timer.timeout_ttl);
+                    printf("Router %s now have RELAXED time out TTL: %d sec, %d usec!\n", node_table[i].ip._ip_str, (uint32_t)node_table[i]._timer.timeout_ttl.tv_sec, (uint32_t)node_table[i]._timer.timeout_ttl.tv_usec);
                 }
                 else
                 {
                     gettimeofday(&(node_table[i]._timer.time_last), NULL);                                                  // Save the current time
-                    timeradd(&node_table[i]._timer.time_last, &node_table[i]._timer.ttl, &node_table[i]._timer.time_next);  // Calculates the expected next update arrival time
+                    timeradd(&node_table[i]._timer.time_last, &node_table[i]._timer.timeout_ttl, &node_table[i]._timer.time_next);  // Calculates the expected next update arrival time
                 }
 
                 node_table[i]._timer.time_outs = 0;
@@ -468,13 +477,15 @@ void timer_timeout_handler()
             node_table[i]._timer.time_last = time_now;
             node_table[i]._timer.timer_pending = FALSE;
         }
+        /*
         else if(node_table[i]._timer.timer_pending == TRUE){
             node_table[i]._timer.time_outs++;
             node_table[i]._timer.timer_pending = FALSE;
             printf("TIMEOUT detected! Missing router update from %s, for the %d times!\n", node_table[i].ip._ip_str, node_table[i]._timer.time_outs);
-        }
+        }*/
 
-        if((node_table[i]._timer.time_outs >= MAX_TIMEOUT_CT) && (node_table[i].self != TRUE)){
+        else if(node_table[i]._timer.timer_pending == TRUE){
+        //if((node_table[i]._timer.time_outs >= MAX_TIMEOUT_CT) && (node_table[i].self != TRUE)){
             printf("Router update %s is missed for %d times, consider this router is offline.\n", node_table[i].ip._ip_str, MAX_TIMEOUT_CT);
             timerclear(&node_table[i]._timer.time_next);
             timerclear(&node_table[i]._timer.time_last);
