@@ -250,29 +250,20 @@ void BellmanFord_alg(const char * update_packet){
     // update routing table of node_table
     for (int i = 0; i < MAX_NODE_NUM; i++)
     {
-        if ((node_table[i].self == FALSE) && (source_id != node_table[i].raw_data.router_id))
-        {
-            for (int j = 0; j < update_fields; j++)
-            {
-<<<<<<< HEAD
-                if ((router_info[j].router_ip == node_table[i].raw_data.router_ip)&&(router_info[j].router_cost != UINT16_MAX))
-=======
-                if ((router_info[j].router_ip == node_table[i].raw_data.router_ip) && (router_info[j].router_cost != UINT16_MAX))
->>>>>>> origin/DJ
+        for (int j = 0; j < update_fields; j++)
+        {                
+            if ((router_info[j].router_ip == node_table[i].raw_data.router_ip) && (router_info[j].router_cost != UINT16_MAX))
+              {
+                temp = base_cost + ntohs(router_info[j].router_cost);
+                if (temp < node_table[i].cost_to)
                 {
-                    temp = base_cost + ntohs(router_info[j].router_cost);
-                    if (temp < node_table[i].cost_to)
-                    {
-                        printf("Updated new cost:%d to neighbour:%d\n",temp, source_id);
-                        node_table[i].cost_to = temp;
-                        node_table[i].next_hop_router_id = source_id;
-                    }
+                    printf("Updated new cost:%d to neighbour:%d\n",temp, source_id);
+                    node_table[i].cost_to = temp;
+                    node_table[i].next_hop_router_id = source_id;
                 }
-
             }
 
         }
-
 
     }
 
