@@ -198,10 +198,13 @@ bool data_recv_hook(int sock_index)
 void send_file(uint16_t payload_len,const char * cntrl_payload)
 {
 
+    uint8_t data_count = 0;
     int next_hop_fd = 0;
     struct CONTROL_SENDFILE header = {0};
     struct DATA _data_packet = {0};
     struct DATA _data_packet_to_send = {0}; // A delayed version to detect EOF
+
+    printf("%d\n", __LINE__);
 
     char * file_name_ptr = (char *)(cntrl_payload + sizeof(struct CONTROL_SENDFILE));
     uint16_t file_name_len = payload_len - sizeof(struct CONTROL_SENDFILE);
@@ -210,7 +213,7 @@ void send_file(uint16_t payload_len,const char * cntrl_payload)
 
     header = *((struct CONTROL_SENDFILE *)&cntrl_payload);
 
-    memcpy(&file_name, file_name_ptr, file_name_len);
+    memcpy(file_name, file_name_ptr, file_name_len);
 
     // Proccess header information
     next_hop_fd = get_next_hop(header.dest_ip_addr);
@@ -235,6 +238,11 @@ void send_file(uint16_t payload_len,const char * cntrl_payload)
             read_s = fread(file_data_payload, 1, MAX_DATA_PAYLOAD, fp);
             if(read_s > 0)
             {
+                data_count++;
+                printf("Data package No.%d is ready:\n", data_count);
+                payload_printer(16, (char *)&_data_packet_to_send);
+                printf("......\n");
+                printf("Sending......\n");
                 // _data_packet_to_send is not EOF
                 sendALL(next_hop_fd, (char *)&_data_packet_to_send, sizeof(struct DATA));
                 update_data_record(&_data_packet_to_send);
@@ -243,6 +251,11 @@ void send_file(uint16_t payload_len,const char * cntrl_payload)
                 _data_packet.seq_num = ntohs(ntohs(_data_packet.seq_num) + 1);
             }
             else{
+                data_count++;
+                printf("Data package No.%d is ready, this is the last packet for this transfer:\n", data_count);
+                payload_printer(16, (char *)&_data_packet_to_send);
+                printf("......\n");
+                printf("Sending......\n");
                 _data_packet.padding = DATA_FIN_FLAG_MASK;
                 sendALL(next_hop_fd, (char *)&_data_packet_to_send, sizeof(struct DATA));
                 update_data_record(&_data_packet_to_send);
@@ -254,8 +267,6 @@ void send_file(uint16_t payload_len,const char * cntrl_payload)
         }
     }
     else printf("Open File Failed\n");
-
-
 
     fclose(fp);
     free(file_name);

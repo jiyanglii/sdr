@@ -70,64 +70,72 @@ void main_loop()
             printf("Select() timeout!!\n");
             timer_timeout_handler();
         }
+        else
+        {
 
-        /* Loop through file descriptors to check which ones are ready */
-        for(sock_index=0; sock_index<=head_fd; sock_index+=1){
+            /* Loop through file descriptors to check which ones are ready */
+            for(sock_index=0; sock_index<=head_fd; sock_index+=1){
 
-            if(FD_ISSET(sock_index, &watch_list)){
+                if(FD_ISSET(sock_index, &watch_list)){
 
-                /* control_socket */
-                if(sock_index == control_socket){
-                    fdaccept = new_control_conn(sock_index);
+                    /* control_socket */
+                    if(sock_index == control_socket){
+                        fdaccept = new_control_conn(sock_index);
 
                     /* Add to watched socket list */
                     FD_SET(fdaccept, &master_list);
                     if(fdaccept > head_fd) head_fd = fdaccept;
-                }
+                    }
 
 #ifdef TEST
 
-                else if (sock_index == STDIN){
-                    char *cmd = (char*) calloc(CMD_SIZE, sizeof(char));
+                    else if (sock_index == STDIN){
+                        char *cmd = (char*) calloc(CMD_SIZE, sizeof(char));
 
-                    if(fgets(cmd, CMD_SIZE-1, stdin) == NULL) //Mind the newline character that will be written to cmd
-                        exit(-1);
-                        printf("\nI got: %s\n String size:%d\n", cmd, (int)strlen(cmd));
+                        if(fgets(cmd, CMD_SIZE-1, stdin) == NULL) //Mind the newline character that will be written to cmd
+                            exit(-1);
+                            printf("\nI got: %s\n String size:%d\n", cmd, (int)strlen(cmd));
 
-                    processCMD(atoi(cmd));
+                        processCMD(atoi(cmd));
 
-                    free(cmd);
-                }
+                        free(cmd);
+                    }
 #endif
-                /* router_socket */
-                else if(sock_index == router_socket){
-                    //call handler that will call recvfrom() .....
-                    udp_router_update_recv(sock_index);
-                }
-
-                /* data_socket */
-                else if(sock_index == data_socket){
-                    fdaccept = new_data_conn(sock_index);
-
-                    /* Add to watched socket list */
-                    FD_SET(fdaccept, &master_list);
-                    if(fdaccept > head_fd) head_fd = fdaccept;
-                }
-
-                /* Existing connection */
-                else{
-                    if(isControl(sock_index)){
-                        if(!control_recv_hook(sock_index)) FD_CLR(sock_index, &master_list);
+                    /* router_socket */
+                    else if(sock_index == router_socket){
+                            //call handler that will call recvfrom() .....
+                        udp_router_update_recv(sock_index);
                     }
-                    else if (isData(sock_index)){
-                        if(!data_recv_hook(sock_index)) FD_CLR(sock_index, &master_list);
+
+                    /* data_socket */
+                    else if(sock_index == data_socket){
+                        fdaccept = new_data_conn(sock_index);
+
+                        /* Add to watched socket list */
+                        FD_SET(fdaccept, &master_list);
+                        if(fdaccept > head_fd) head_fd = fdaccept;
                     }
-                    else ERROR("Unknown socket index");
+
+                    /* Existing connection */
+                    else{
+                        if(isControl(sock_index)){
+                            if(!control_recv_hook(sock_index)) FD_CLR(sock_index, &master_list);
+                        }
+                        else if (isData(sock_index)){
+                            if(!data_recv_hook(sock_index)) FD_CLR(sock_index, &master_list);
+                        }
+                        else ERROR("Unknown socket index");
+                    }
                 }
             }
         }
 
         if(CRASH) {
+            usleep(500000);
+            for(sock_index=0; sock_index<=head_fd; sock_index+=1){
+                //close(sock_index);
+                continue;
+            }
             usleep(50000); // Add some delay to ensure the response is sent
             exit(0);
         }
@@ -342,12 +350,12 @@ void udp_router_update_recv(int udp_fd){
                     printf("Recieving update from %s for the second time, calculating new TTL!\n", node_table[i].ip._ip_str);
                     gettimeofday(&time_now, NULL);
                     timersub(&time_now, &node_table[i]._timer.time_last, &node_table[i]._timer.ttl);
-                    printf("Router %s now have TTL: %d sec, %d usec!\n", (uint32_t)node_table[i]._timer.ttl.tv_sec, (uint32_t)node_table[i]._timer.ttl.tv_usec);
+                    printf("Router %s now have TTL: %d sec, %d usec!\n", node_table[i].ip._ip_str, (uint32_t)node_table[i]._timer.ttl.tv_sec, (uint32_t)node_table[i]._timer.ttl.tv_usec);
 
                     // Relax the ttl req for a bit
                     struct timeval delay = {0, 30000};
                     timeradd(&delay, &node_table[i]._timer.ttl, &node_table[i]._timer.ttl);
-                    printf("Router %s now have RELAXED TTL: %d sec, %d usec!\n", (uint32_t)node_table[i]._timer.ttl.tv_sec, (uint32_t)node_table[i]._timer.ttl.tv_usec);
+                    printf("Router %s now have RELAXED TTL: %d sec, %d usec!\n", node_table[i].ip._ip_str, (uint32_t)node_table[i]._timer.ttl.tv_sec, (uint32_t)node_table[i]._timer.ttl.tv_usec);
                 }
                 else
                 {
@@ -461,9 +469,9 @@ void timer_timeout_handler()
             node_table[i]._timer.timer_pending = FALSE;
         }
         else if(node_table[i]._timer.timer_pending == TRUE){
-            printf("TIMEOUT detected! Router update %s\n", node_table[i].ip._ip_str);
             node_table[i]._timer.time_outs++;
             node_table[i]._timer.timer_pending = FALSE;
+            printf("TIMEOUT detected! Missing router update from %s, for the %d times!\n", node_table[i].ip._ip_str, node_table[i]._timer.time_outs);
         }
 
         if((node_table[i]._timer.time_outs >= MAX_TIMEOUT_CT) && (node_table[i].self != TRUE)){
