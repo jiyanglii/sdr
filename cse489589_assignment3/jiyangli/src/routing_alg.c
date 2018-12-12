@@ -225,7 +225,7 @@ void BellmanFord_alg(const char * update_packet){
 
 
     header = *((struct ROUTING_UPDATE_HEADER *)ptr);
-    ptr += sizeof(struct CONTROL_INIT_HEADER);
+    ptr += sizeof(struct ROUTING_UPDATE_HEADER);
 
     uint16_t update_fields = ntohs(header.router_num);
     uint32_t source_ip = (header.source_router_ip);
@@ -258,7 +258,7 @@ void BellmanFord_alg(const char * update_packet){
     {
         for (int j = 0; j < update_fields; j++)
         {
-            if (router_info[j].router_ip == node_table[i].raw_data.router_ip)
+            if (router_info[j].router_id == node_table[i].raw_data.router_id)
               {
                 temp = base_cost + ntohs(router_info[j].router_cost);
                 if (temp < node_table[i].cost_to)
