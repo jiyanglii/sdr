@@ -82,6 +82,7 @@ struct ROUTER_INFO
 
 void GetPrimaryIP(struct IPV4_ADDR * local_ip);
 int get_next_hop(uint32_t dest_ip);
+int get_next_hop_by_id(uint16_t dest_id);
 uint8_t new_recv_data_link(uint32_t ip, int fd);
 void BellmanFord_alg(const char * update_packet);
 void send_update_table(void);

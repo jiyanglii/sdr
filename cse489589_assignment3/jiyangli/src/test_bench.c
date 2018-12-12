@@ -20,13 +20,13 @@
 
 int ret_print, ret_log;
 
-uint16_t test_init_payload[] = {       0x0200, 0x0600,
+uint16_t test_init_payload[] = {    0x0200, 0x0600,
                                     0x0100, 3452,
-                                    2344,   0002,
-                                    0x01B2,   0xC0A8,
+                                    8888,   0000,
+                                    0x000A, 0x0F02,
                                     0x0200, 4562,
-                                    2345,   0002,
-                                    0x01B3,   0xC0A8,
+                                    2222,   0002,
+                                    0x000A, 0x0F02,
                                     0x0003, 8356,
                                     1635,   0002,
                                     0x80cd,   0x2421,
@@ -38,7 +38,16 @@ uint16_t test_init_payload[] = {       0x0200, 0x0600,
                                     0x80cd,   0x2424,
                             };
 
-uint8_t test_send_file[] = {    0x80, 0xcd, 0x24, 0x21, // dest ip
+uint16_t test_init_payload1[] = {   0x0200, 0x0600,
+                                    0x0100, 3452,
+                                    8888,   0002,
+                                    0x000A, 0x0F02,
+                                    0x0200, 4562,
+                                    2223,   0000,
+                                    0x000A, 0x0F02,
+                                };
+
+uint8_t test_send_file[] = {    0x0A, 0x00, 0x02, 0x0F, // dest ip
                                 0x04,                   // init ttl
                                 0x37,                   // transfer id
                                 0x00, 0x18,             // init seq
@@ -67,6 +76,9 @@ void processCMD(int cmd)
     if(cmd == 0){
         init_top();
     }
+    else if(cmd == 11){
+        router_init((char *)&test_init_payload1);
+    }
     else if(cmd == 2){
         routing_table_response(0,2);
     }
@@ -77,6 +89,11 @@ void processCMD(int cmd)
         send_file(sizeof(test_send_file), (char *)&test_send_file[0]);
     }
     else if(cmd == 6){
+        char * _payload = get_file_stats_payload(0x37);
+        uint16_t _payload_len = *((uint16_t *)(_payload + 2));
+        payload_printer((_payload_len), (char *)_payload);
+    }
+    else if(cmd == 66){
         // Auto generate file stats
         // Create 3 transfer records
         new_transfer_record(0xaa,0x55,0x0000);

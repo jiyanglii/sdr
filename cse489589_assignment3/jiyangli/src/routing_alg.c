@@ -114,7 +114,8 @@ void router_init(char* init_payload){
         node_table[i].next_hop_router_id = UINT16_MAX;
         node_table[i].cost_to = ntohs(node_table[i].raw_data.router_cost);
 
-        if((node_table[i].ip._ip == local_ip._ip) && (node_table[i].cost_to == 0))
+        //if((node_table[i].ip._ip == local_ip._ip) && (node_table[i].cost_to == 0))
+        if(node_table[i].cost_to == 0)
         {
             // This is the self node
             self_found = TRUE;
@@ -317,6 +318,20 @@ void GetPrimaryIP(struct IPV4_ADDR * _local_ip) {
         _local_ip->_ip = name.sin_addr.s_addr;
         close(sock);
     }
+}
+
+int get_next_hop_by_id(uint16_t dest_id)
+{
+    uint16_t next_hop_id = -1;
+    for(int i=0;i<active_node_num;i++){
+        printf("dest_id %x node_table[i].raw_data.router_id  %x\n",dest_id, node_table[i].raw_data.router_id);
+        if(node_table[i].raw_data.router_id == dest_id){
+            new_send_data_link_by_id(dest_id);
+            return node_table[i].fd;
+        }
+    }
+
+    return 0;
 }
 
 int get_next_hop(uint32_t dest_ip)

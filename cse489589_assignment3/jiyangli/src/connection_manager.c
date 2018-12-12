@@ -253,6 +253,38 @@ void refresh_data_links()
     }
 }
 
+void new_send_data_link_by_id(uint16_t id)
+{
+
+    int _data_socket = -1;
+
+    for(int i=0;i<active_node_num;i++){
+        if((node_table[i].raw_data.router_id == id) && (node_table[i].link_status == FALSE) && (node_table[i].self == FALSE) && (node_table[i].neighbor == TRUE)){
+
+            printf("Create new data link with %s\n", node_table[i].ip._ip_str);
+            _data_socket = new_data_conn_client(node_table[i].ip._ip, node_table[i].raw_data.router_data_port);
+            if(_data_socket < 0){
+                printf("Link creation failed with %s\n, error code: %d", node_table[i].ip._ip_str, (uint16_t)_data_socket);
+                // Link creation failed
+                node_table[i].link_status = FALSE;
+                node_table[i].fd = 0;
+            }
+            else
+            {
+                printf("New data link with neigbour is created!\n");
+                // On success, update DATA_LINK list and node_info list
+                node_table[i].link_status = TRUE;
+                node_table[i].fd = _data_socket;
+                /* Add to watched socket list */
+                FD_SET(_data_socket, &master_list);
+                if(_data_socket > head_fd) head_fd = _data_socket;
+            }
+        } else if((node_table[i].raw_data.router_id == id) && (node_table[i].link_status == TRUE) && (node_table[i].self == FALSE) && (node_table[i].neighbor == TRUE))
+            printf("The TCP link to %s is alrready up.\n", node_table[i].ip._ip_str);
+    }
+}
+
+
 void new_send_data_link(uint32_t ip)
 {
 

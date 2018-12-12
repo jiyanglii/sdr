@@ -164,6 +164,7 @@ void data_packet_update(struct DATA * _data)
 
 bool data_recv_hook(int sock_index)
 {
+    printf("New data recieved!!1\n");
     int next_hop_fd = 0;
     struct DATA _data = {0};
 
@@ -177,12 +178,15 @@ bool data_recv_hook(int sock_index)
     data_packet_update(&_data);
 
     // Check if destination is self
-    if(ntohl(_data.dest_ip_addr) == local_node_info->ip._ip)
+    printf("Destination of this incoming data is %x\n", _data.dest_ip_addr);
+    if(_data.dest_ip_addr == local_node_info->ip._ip)
     {
+        printf("Saving data to local...\n");
         save_data(&_data);
     }
     else{
-        // Forwarding incoming data to next hop here
+        // Forwarding incoming data to next hop... here
+        printf("Forwarding incoming data to next hop...n");
         next_hop_fd = get_next_hop(ntohl(_data.dest_ip_addr));
 
         if(_data.ttl>0){
@@ -198,7 +202,7 @@ bool data_recv_hook(int sock_index)
 void send_file(uint16_t payload_len,const char * cntrl_payload)
 {
 
-    uint8_t data_count = 0;
+    uint16_t data_count = 0;
     int next_hop_fd = 0;
     struct CONTROL_SENDFILE header = {0};
     struct DATA _data_packet = {0};
@@ -211,12 +215,14 @@ void send_file(uint16_t payload_len,const char * cntrl_payload)
     char * file_name = (char *)calloc(file_name_len, sizeof(char));
     char * file_data_payload = &_data_packet.payload[0];
 
-    header = *((struct CONTROL_SENDFILE *)&cntrl_payload);
+    header = *((struct CONTROL_SENDFILE *)cntrl_payload);
 
     memcpy(file_name, file_name_ptr, file_name_len);
 
     // Proccess header information
     next_hop_fd = get_next_hop(header.dest_ip_addr);
+    //next_hop_fd = get_next_hop_by_id(0x0100);
+    printf("next_hop_fd %d\n", next_hop_fd);
     _data_packet.dest_ip_addr = header.dest_ip_addr;
     _data_packet.transfer_id = header.transfer_id;
     _data_packet.ttl = header.init_ttl;
@@ -235,6 +241,7 @@ void send_file(uint16_t payload_len,const char * cntrl_payload)
 
         while (read_s > 0){
             _data_packet_to_send = _data_packet;
+            memset(file_data_payload, '\0', MAX_DATA_PAYLOAD);
             read_s = fread(file_data_payload, 1, MAX_DATA_PAYLOAD, fp);
             if(read_s > 0)
             {
@@ -247,7 +254,6 @@ void send_file(uint16_t payload_len,const char * cntrl_payload)
                 sendALL(next_hop_fd, (char *)&_data_packet_to_send, sizeof(struct DATA));
                 update_data_record(&_data_packet_to_send);
                 new_transfer_record(_data_packet_to_send.transfer_id, _data_packet_to_send.ttl, ntohs(_data_packet_to_send.seq_num));
-                memset(file_data_payload, '\0', MAX_DATA_PAYLOAD);
                 _data_packet.seq_num = ntohs(ntohs(_data_packet.seq_num) + 1);
             }
             else{
@@ -260,15 +266,15 @@ void send_file(uint16_t payload_len,const char * cntrl_payload)
                 sendALL(next_hop_fd, (char *)&_data_packet_to_send, sizeof(struct DATA));
                 update_data_record(&_data_packet_to_send);
                 new_transfer_record(_data_packet_to_send.transfer_id, _data_packet_to_send.ttl, ntohs(_data_packet_to_send.seq_num));
-                memset(file_data_payload, '\0', MAX_DATA_PAYLOAD);
                 break;
             }
-            usleep(1500);
+            usleep(0);
         }
+
+        fclose(fp);
     }
     else printf("Open File Failed\n");
 
-    fclose(fp);
     free(file_name);
 }
 
@@ -287,7 +293,7 @@ void save_data(const struct DATA * _data)
     if(_data->ttl > 0) // Drop the packet when ttl reaches 0
     {
         snprintf(&file_name_str[0], 6, "%s", "file-");
-        snprintf(&file_name_str[5], 3, "%d", _data->transfer_id);
+        snprintf(&file_name_str[5], 3, "%x", _data->transfer_id);
 
         fp = fopen(file_name_str, "a");
 
