@@ -159,38 +159,43 @@ void remove_data_conn(int sock_index)
 
 void data_packet_update(struct DATA * _data)
 {
-    _data->ttl--;
+    if(_data->ttl>0) _data->ttl--;
 }
 
 bool data_recv_hook(int sock_index)
 {
-    printf("New data recieved!!1\n");
+    printf("New data recieved!!!\n");
     int next_hop_fd = 0;
     struct DATA _data = {0};
 
     if(recvALL(sock_index, (char *)&_data, sizeof(struct DATA)) < 0){
+        printf("Recieve failed, removing FD.\n");
         remove_data_conn(sock_index);
         return FALSE;
     }
 
     data_packet_update(&_data); // Decrementing TTL
-    update_data_record(&_data);
 
-    // Check if destination is self
-    printf("Destination of this incoming data is %x\n", _data.dest_ip_addr);
-    if(_data.dest_ip_addr == local_node_info->ip._ip)
+    if(_data.ttl>0) // Drop it when TTL reaches 0
     {
-        printf("Saving data to local...\n");
-        save_data(&_data);
-    }
-    else{
-        // Forwarding incoming data to next hop... here
-        printf("Forwarding incoming data to next hop...n");
-        next_hop_fd = get_next_hop(_data.dest_ip_addr);
+        update_data_record(&_data);
 
-        if((_data.ttl>0) && (next_hop_fd>0)){
-            sendALL(next_hop_fd, (char *)&_data, sizeof(struct DATA));
-            new_transfer_record(_data.transfer_id, _data.ttl, _data.seq_num);
+        // Check if destination is self
+        printf("Destination of this incoming data is %x\n", _data.dest_ip_addr);
+        if(_data.dest_ip_addr == local_node_info->ip._ip)
+        {
+            printf("Saving data to local...\n");
+            save_data(&_data);
+        }
+        else{
+            // Forwarding incoming data to next hop... here
+            printf("Forwarding incoming data to next hop...n");
+            next_hop_fd = get_next_hop(_data.dest_ip_addr);
+
+            if(next_hop_fd>0){
+                sendALL(next_hop_fd, (char *)&_data, sizeof(struct DATA));
+                new_transfer_record(_data.transfer_id, _data.ttl, _data.seq_num);
+            }
         }
     }
 
