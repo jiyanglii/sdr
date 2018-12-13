@@ -8,7 +8,7 @@ OBJ_PATH  = $(patsubst $(SRC_DIR)/%,$(OBJ_DIR)/%,$(OBJ_FILES))
 
 LIBS	=
 CC	= clang
-CFLAGS	= -g -I$(INC_DIR) -Wpedantic -Werror -Wshadow -Wstrict-overflow -fno-strict-aliasing -Wno-missing-field-initializers -O2 -march=native
+CFLAGS	= -g -I$(INC_DIR) -D_FORTIFY_SOURCE=2 -Werror=implicit-function-declaration -Werror=format-security -Wpedantic -Werror -Wshadow -Wstrict-overflow -fno-strict-aliasing -Wno-missing-field-initializers -O2 -march=native
 
 all: assignment3
 

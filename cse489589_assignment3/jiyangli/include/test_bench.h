@@ -2,6 +2,7 @@
 
 #define CMD_SIZE  256
 
+#undef  printf
 #define printf debug_print
 
 void init_top();
