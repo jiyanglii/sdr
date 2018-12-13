@@ -73,6 +73,7 @@ struct ROUTER_INFO
 
     // Routing related
     uint16_t cost_to;                           // Host
+    uint16_t init_cost_to;
     uint16_t next_hop_router_id;                // Network
 
     struct ROUTER_UPDATE_TIMER _timer;

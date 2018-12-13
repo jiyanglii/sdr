@@ -36,7 +36,7 @@
 #include "../include/data_handler.h"
 #include "../include/control_handler.h"
 
-#ifdef TEST
+#ifdef DEBUG
 #include "../include/test_bench.h"
 #endif
 
@@ -227,8 +227,7 @@ bool control_recv_hook(int sock_index)
 }
 
 void crash(int sock_index, uint8_t _control_code){
-    // Stop broadcasting routing table to neighbors
-    CRASH = TRUE;
+
     // Send response message to controller
     char *cntrl_response_header;
 
@@ -245,6 +244,9 @@ void crash(int sock_index, uint8_t _control_code){
         }
     }
     free(cntrl_response_header);
+
+    // Stop broadcasting routing table to neighbors
+    CRASH = TRUE;
 }
 
 
@@ -315,7 +317,12 @@ void send_prev_data(int sock_index, uint8_t _control_code)
         memcpy(cntrl_response+CNTRL_RESP_HEADER_SIZE, (char *) &data_hist[1], payload_len);
     }
 
-    sendALL(sock_index, cntrl_response, response_len);
+#ifdef DEBUG
+        printf("Sending LAST_DATA_PACKET response(%d):\n", _control_code);
+        payload_printer(32, (char *)cntrl_response);
+#endif
+
+    if(sock_index>0) sendALL(sock_index, cntrl_response, response_len);
 
     free(cntrl_response);
     free(cntrl_response_header);
@@ -341,10 +348,10 @@ void send_file_stats_response(int sock_index, uint8_t _control_code, const char 
     char * file_stats_payload = get_file_stats_payload(_transfer_id);
     if(file_stats_payload){
 
-        _payload_len = *((uint16_t *)(_payload + 2));
+        _payload_len = *((uint16_t *)(file_stats_payload + 2));
 
         // Recover the padding to 0
-        *((uint16_t *)(_payload + 2)) = 0x0000;
+        *((uint16_t *)(file_stats_payload + 2)) = 0x0000;
 
         cntrl_response_header = create_response_header(sock_index, _control_code, 0, _payload_len);
 
@@ -352,7 +359,12 @@ void send_file_stats_response(int sock_index, uint8_t _control_code, const char 
         memcpy(cntrl_response, cntrl_response_header, CNTRL_RESP_HEADER_SIZE);
         memcpy((cntrl_response + CNTRL_RESP_HEADER_SIZE), file_stats_payload, _payload_len);
 
-        sendALL(sock_index, cntrl_response, (CNTRL_RESP_HEADER_SIZE + _payload_len));
+#ifdef DEBUG
+        printf("Sending SENDFILE-STATS response:\n");
+        payload_printer((CNTRL_RESP_HEADER_SIZE + _payload_len), (char *)cntrl_response);
+#endif
+
+        if(sock_index>0) sendALL(sock_index, cntrl_response, (CNTRL_RESP_HEADER_SIZE + _payload_len));
 
         free(cntrl_response);
         free(cntrl_response_header);

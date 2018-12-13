@@ -4,7 +4,7 @@
 #define DATA_HEADER_SIZE    12 // including the padding
 #define MAX_DATA_PAYLOAD    1024
 
-#define DATA_FIN_FLAG_MASK  0x10000000
+#define DATA_FIN_FLAG_MASK  0xF0000000
 
 /* Linked List for active data connections */
 struct DataConn

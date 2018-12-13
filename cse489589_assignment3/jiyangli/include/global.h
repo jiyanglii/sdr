@@ -1,12 +1,18 @@
 #pragma once
 
-#define TEST
 #define DEBUG
+
 #define STDIN 0
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
+#include <unistd.h>
+#include <stdint.h>
+#include <string.h>
+#include <limits.h>
+#include <arpa/inet.h>
+#include <stdarg.h>
 
 typedef enum {FALSE, TRUE} bool;
 

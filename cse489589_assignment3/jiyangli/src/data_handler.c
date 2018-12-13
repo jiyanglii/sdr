@@ -35,7 +35,7 @@
 #include "../include/routing_alg.h"
 #include "../include/connection_manager.h"
 
-#ifdef TEST
+#ifdef DEBUG
 #include "../include/test_bench.h"
 #endif
 
@@ -173,9 +173,8 @@ bool data_recv_hook(int sock_index)
         return FALSE;
     }
 
+    data_packet_update(&_data); // Decrementing TTL
     update_data_record(&_data);
-
-    data_packet_update(&_data);
 
     // Check if destination is self
     printf("Destination of this incoming data is %x\n", _data.dest_ip_addr);
@@ -191,7 +190,6 @@ bool data_recv_hook(int sock_index)
 
         if((_data.ttl>0) && (next_hop_fd>0)){
             sendALL(next_hop_fd, (char *)&_data, sizeof(struct DATA));
-            update_data_record(&_data);
             new_transfer_record(_data.transfer_id, _data.ttl, _data.seq_num);
         }
     }
@@ -246,10 +244,15 @@ void send_file(uint16_t payload_len,const char * cntrl_payload)
             if(read_s > 0)
             {
                 data_count++;
-                printf("Data package No.%d is ready:\n", data_count);
-                payload_printer(16, (char *)&_data_packet_to_send);
-                printf("......\n");
-                printf("Sending......\n");
+#ifdef DEBUG
+                if(data_count<2) // Only print the ferst and the last
+                {
+                    printf("Data package No.%d is ready:\n", data_count);
+                    payload_printer(32, (char *)&_data_packet_to_send);
+                    printf("......\n");
+                    printf("Sending......\n");
+                }
+#endif
                 // _data_packet_to_send is not EOF
                 sendALL(next_hop_fd, (char *)&_data_packet_to_send, sizeof(struct DATA));
                 update_data_record(&_data_packet_to_send);
@@ -258,10 +261,12 @@ void send_file(uint16_t payload_len,const char * cntrl_payload)
             }
             else{
                 data_count++;
+#ifdef DEBUG
                 printf("Data package No.%d is ready, this is the last packet for this transfer:\n", data_count);
-                payload_printer(16, (char *)&_data_packet_to_send);
+                payload_printer(32, (char *)&_data_packet_to_send);
                 printf("......\n");
                 printf("Sending......\n");
+#endif
                 _data_packet.padding = DATA_FIN_FLAG_MASK;
                 sendALL(next_hop_fd, (char *)&_data_packet_to_send, sizeof(struct DATA));
                 update_data_record(&_data_packet_to_send);
@@ -309,7 +314,9 @@ void save_data(const struct DATA * _data)
 struct TransferRecord * getExsitingTransfer(uint8_t _transfer_id)
 {
     LIST_FOREACH(transfer_rec, &TransferRecordList, entries){
+#ifdef DEBUG
         printf("transfer_rec->transfer_id: = %x\n", transfer_rec->transfer_id);
+#endif
         if(transfer_rec->transfer_id == _transfer_id) return (struct TransferRecord *)transfer_rec;
     }
 
@@ -392,7 +399,7 @@ char * get_file_stats_payload(uint16_t _transfer_id)
 
     TAILQ_FOREACH(seq_rec, &_trecord->_seq, next)
     {
-        *(uint16_t *)ptr = (uint16_t)(seq_rec->seq_num);
+        *(uint16_t *)ptr = htons((uint16_t)(seq_rec->seq_num));
         ptr+=2;
     }
 

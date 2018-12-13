@@ -6,7 +6,6 @@
 #include <stdint.h>
 #include <string.h>
 #include <limits.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
 #include <stdarg.h>
 
@@ -103,12 +102,15 @@ void processCMD(int cmd)
         for(int i=0;i<20;i++)
         {
             // add 20 new records for each file
-            //new_transfer_record(0xaa,(0x55-i),(0x0000+i));
+            new_transfer_record(0xaa,(0x55-i),(0x0000+i));
             new_transfer_record(0xbb,(0x66-i*2),(0x1000+i*2));
             new_transfer_record(0xcc,(0x77-i*3),(0x2000+i*3));
         }
 
         // Get filestats payload
+        char trans = 0xbb;
+        send_file_stats_response(0,6,&trans);
+
         char * _payload = get_file_stats_payload(0xbb);
         if(_payload) {
             uint16_t _payload_len = *((uint16_t *)(_payload + 2));

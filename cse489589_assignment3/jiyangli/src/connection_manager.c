@@ -39,7 +39,7 @@
 #include "../include/routing_alg.h"
 #include "../include/network_util.h"
 
-#ifdef TEST
+#ifdef DEBUG
 #include "../include/test_bench.h"
 #endif
 
@@ -87,7 +87,7 @@ void main_loop()
                     if(fdaccept > head_fd) head_fd = fdaccept;
                     }
 
-#ifdef TEST
+#ifdef DEBUG
 
                     else if (sock_index == STDIN){
                         char *cmd = (char*) calloc(CMD_SIZE, sizeof(char));
@@ -151,7 +151,7 @@ void init()
     FD_ZERO(&master_list);
     FD_ZERO(&watch_list);
 
-#ifdef TEST
+#ifdef DEBUG
     /* Register STDIN */
     FD_SET(STDIN, &master_list);
     //init_top();
@@ -391,12 +391,14 @@ void udp_router_update_recv(int udp_fd){
                         timeradd(&node_table[i]._timer.ttl, &node_table[i]._timer.timeout_ttl, &node_table[i]._timer.timeout_ttl);
                     }
 
-                    printf("This router times out for every %d sec and %d usec.\n", node_table[i]._timer.timeout_ttl.tv_sec, node_table[i]._timer.timeout_ttl.tv_usec);
+                    printf("This router times out for every %d sec and %d usec.\n", (uint32_t)node_table[i]._timer.timeout_ttl.tv_sec, (uint32_t)node_table[i]._timer.timeout_ttl.tv_usec);
 
                     // Relax the ttl req for a bit
                     struct timeval delay = {0, 30000};
                     timeradd(&delay, &node_table[i]._timer.timeout_ttl, &node_table[i]._timer.timeout_ttl);
                     printf("Router %s now have RELAXED time out TTL: %d sec, %d usec!\n", node_table[i].ip._ip_str, (uint32_t)node_table[i]._timer.timeout_ttl.tv_sec, (uint32_t)node_table[i]._timer.timeout_ttl.tv_usec);
+
+                    timeradd(&node_table[i]._timer.time_last, &node_table[i]._timer.timeout_ttl, &node_table[i]._timer.time_next);
                 }
                 else
                 {

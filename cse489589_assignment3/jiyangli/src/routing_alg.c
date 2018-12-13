@@ -42,11 +42,9 @@
 #include "../include/network_util.h"
 
 
-#ifdef TEST
+#ifdef DEBUG
 #include "../include/test_bench.h"
 #endif
-
-#define DEBUG
 
 struct ROUTER_INFO node_table[MAX_NODE_NUM] = {0};
 uint16_t active_node_num = 0;
@@ -112,6 +110,7 @@ void router_init(char* init_payload){
         ptr += sizeof(struct CONTROL_INIT_ROUTER_INFO);
 
         node_table[i].next_hop_router_id = UINT16_MAX;
+        node_table[i].init_cost_to = ntohs(node_table[i].raw_data.router_cost);
         node_table[i].cost_to = ntohs(node_table[i].raw_data.router_cost);
 
         //if(node_table[i].cost_to == 0)
@@ -245,20 +244,22 @@ void BellmanFord_alg(const char * update_packet){
     for(int i=0;i<MAX_NODE_NUM;i++){
         if (node_table[i].raw_data.router_id == source_id)
         {
-            base_cost = node_table[i].cost_to;
+            base_cost = node_table[i].init_cost_to;
         }
     }
 
-    printf("Update from neighbour:%x with old cost%d\n", source_id,base_cost);
+#ifdef DEBUG
+    printf("Update from neighbour:%x with init cost%d\n", source_id,base_cost);
+#endif
 
     // update routing table of node_table
     for (int i = 0; i < MAX_NODE_NUM; i++)
         //printf("+++++ node_table[%d] = \n", i, node_table[i].raw_data.router_id);
     {
-        printf("+++++ node_table[%d] = %x\n", i, node_table[i].raw_data.router_id);
+        //printf("+++++ node_table[%d] = %x\n", i, node_table[i].raw_data.router_id);
         for (int j = 0; j < update_fields; j++)
         {
-            printf("---- router_info[%d] = %x\n", j, router_info[j].router_id);
+            //printf("---- router_info[%d] = %x\n", j, router_info[j].router_id);
             if (router_info[j].router_id == node_table[i].raw_data.router_id)
             {
                 if(router_info[j].router_cost != UINT16_MAX)
@@ -386,8 +387,11 @@ void cost_update(const char * _payload)
     {
         if(node_table[i].raw_data.router_id == new_cost.router_id)
         {
+#ifdef DEBUG
             printf("Router %s now have new cost: %x\n, changed from %x", node_table[i].ip._ip_str, new_cost.cost, node_table[i].cost_to);
+#endif
             node_table[i].cost_to = new_cost.cost;
+            node_table[i].init_cost_to = new_cost.cost;
         }
     }
 
