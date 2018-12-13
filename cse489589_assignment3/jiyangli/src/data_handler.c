@@ -233,7 +233,7 @@ void send_file(uint16_t payload_len,const char * cntrl_payload)
     size_t read_s = 0;
     fp = fopen(file_name, "r");
 
-    if (fp) {
+    if ((fp) && (next_hop_fd>0)) { // Only send when dest is found and file is opened
         printf("File opened\n");
         read_s = fread(file_data_payload, 1, MAX_DATA_PAYLOAD, fp);
 
@@ -261,13 +261,13 @@ void send_file(uint16_t payload_len,const char * cntrl_payload)
             }
             else{
                 data_count++;
+                _data_packet_to_send.padding = htonl(DATA_FIN_FLAG_MASK);
 #ifdef DEBUG
                 printf("Data package No.%d is ready, this is the last packet for this transfer:\n", data_count);
                 payload_printer(32, (char *)&_data_packet_to_send);
                 printf("......\n");
                 printf("Sending......\n");
 #endif
-                _data_packet.padding = DATA_FIN_FLAG_MASK;
                 sendALL(next_hop_fd, (char *)&_data_packet_to_send, sizeof(struct DATA));
                 update_data_record(&_data_packet_to_send);
                 new_transfer_record(_data_packet_to_send.transfer_id, _data_packet_to_send.ttl, ntohs(_data_packet_to_send.seq_num));
@@ -314,7 +314,7 @@ void save_data(const struct DATA * _data)
 struct TransferRecord * getExsitingTransfer(uint8_t _transfer_id)
 {
     LIST_FOREACH(transfer_rec, &TransferRecordList, entries){
-#ifdef DEBUG
+#ifdef DEBUG_TRANSFERRECORD
         printf("transfer_rec->transfer_id: = %x\n", transfer_rec->transfer_id);
 #endif
         if(transfer_rec->transfer_id == _transfer_id) return (struct TransferRecord *)transfer_rec;
@@ -339,7 +339,7 @@ void new_transfer(uint8_t _transfer_id)
 
 void new_transfer_record(uint8_t _transfer_id, uint8_t _ttl, uint16_t _seq_num)
 {
-#ifdef DEBUG
+#ifdef DEBUG_TRANSFERRECORD
     printf("New transfer record for ID: %x, TTL: %x, Seq: %x.\n", _transfer_id, _ttl, _seq_num);
 #endif
     struct TransferRecord * temp = getExsitingTransfer(_transfer_id);

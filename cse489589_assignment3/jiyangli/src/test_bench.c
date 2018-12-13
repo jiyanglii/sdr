@@ -90,7 +90,7 @@ void processCMD(int cmd)
     else if(cmd == 6){
         char * _payload = get_file_stats_payload(0x37);
         uint16_t _payload_len = *((uint16_t *)(_payload + 2));
-        payload_printer((_payload_len), (char *)_payload);
+        payload_printer(32, (char *)_payload);
     }
     else if(cmd == 66){
         // Auto generate file stats
@@ -131,6 +131,12 @@ void processCMD(int cmd)
             payload_printer((_payload_len), (char *)_payload);
         }
 
+    }
+    else if(cmd == 7){
+        send_prev_data(0, 7);
+    }
+    else if(cmd == 8){
+        send_prev_data(0, 8);
     }
     else if(cmd == 9){
         send_update_table();
