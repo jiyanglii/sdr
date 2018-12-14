@@ -371,7 +371,7 @@ void send_file_stats_response(int sock_index, uint8_t _control_code, const char 
         free(file_stats_payload);
     }
     else{
-        cntrl_response_header = create_response_header(sock_index, _control_code, 1, 0);
+        cntrl_response_header = create_response_header(sock_index, _control_code, 0, 0);
         sendALL(sock_index, cntrl_response_header, CNTRL_RESP_HEADER_SIZE);
         free(cntrl_response_header);
     }

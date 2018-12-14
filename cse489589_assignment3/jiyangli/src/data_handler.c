@@ -189,12 +189,12 @@ bool data_recv_hook(int sock_index)
         }
         else{
             // Forwarding incoming data to next hop... here
-            printf("Forwarding incoming data to next hop...n");
+            printf("Forwarding incoming data to next hop...\n");
             next_hop_fd = get_next_hop(_data.dest_ip_addr);
 
             if(next_hop_fd>0){
                 sendALL(next_hop_fd, (char *)&_data, sizeof(struct DATA));
-                new_transfer_record(_data.transfer_id, _data.ttl, _data.seq_num);
+                new_transfer_record(_data.transfer_id, _data.ttl, ntohs(_data.seq_num));
             }
         }
     }
@@ -210,8 +210,6 @@ void send_file(uint16_t payload_len,const char * cntrl_payload)
     struct CONTROL_SENDFILE header = {0};
     struct DATA _data_packet = {0};
     struct DATA _data_packet_to_send = {0}; // A delayed version to detect EOF
-
-    printf("%d\n", __LINE__);
 
     char * file_name_ptr = (char *)(cntrl_payload + sizeof(struct CONTROL_SENDFILE));
     uint16_t file_name_len = payload_len - sizeof(struct CONTROL_SENDFILE);

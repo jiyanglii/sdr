@@ -429,20 +429,11 @@ void timer_handler()
 
     gettimeofday(&time_now, NULL);
 
+    // Check for missed timer first
     for(int i=0;i<active_node_num;i++){
+        if(timerisset(&node_table[i]._timer.time_next)){
 
-        node_table[i]._timer.timer_pending = FALSE;
-
-        if(((node_table[i].neighbor == TRUE) || (node_table[i].self == TRUE)) && timerisset(&node_table[i]._timer.time_next)){
-            // Find the closest sched time to the current time
-
-            if(timercmp(&time_now, &node_table[i]._timer.time_next, <) &&
-                timercmp(&next_sched, &node_table[i]._timer.time_next, >))
-            {
-                next_sched = node_table[i]._timer.time_next;
-                next_sched_router_id = node_table[i].raw_data.router_id;
-            }
-            else if((timercmp(&time_now, &node_table[i]._timer.time_next, >)) && (node_table[i].self == TRUE)) // Missed local routing table bradcasting
+            if((timercmp(&time_now, &node_table[i]._timer.time_next, >)) && (node_table[i].self == TRUE)) // Missed local routing table bradcasting
             {
                 // send a update right now
                 printf("Sending update table (MISSED) ..... \n");
@@ -453,17 +444,31 @@ void timer_handler()
                     timeradd(&node_table[i]._timer.time_next, &router_update_ttl, &node_table[i]._timer.time_next);
                 }while(timercmp(&node_table[i]._timer.time_next, &time_now, <)); // If next schefuled time is still smaller than current time, keep adding ttl
             }
-            else if(timercmp(&time_now, &node_table[i]._timer.time_next, >)) // Current time is greater then the sched time: this node is timed out
+            else if(timercmp(&time_now, &node_table[i]._timer.time_next, >) && (node_table[i].self != TRUE)) // Current time is greater then the sched time: this node is timed out
             {
-                timersub(&time_now, &node_table[i]._timer.time_next, &diff);// Find the time difference from now to the sched time
-                if((diff.tv_sec > (MAX_TIMEOUT_CT-1)*router_update_ttl.tv_sec) && (node_table[i]._timer.time_outs >= MAX_TIMEOUT_CT)){
-                    // Missed three consecutive updates from the node
-                    timerclear(&node_table[i]._timer.time_next);
-                    timerclear(&node_table[i]._timer.time_last);
+                // Missed three consecutive updates from the node
+                timerclear(&node_table[i]._timer.time_next);
+                timerclear(&node_table[i]._timer.time_last);
 
-                    // Consider this node is down, set the cost to INF
-                    node_table[i].cost_to = UINT16_MAX;
-                }
+                // Consider this node is down, set the cost to INF
+                node_table[i].cost_to = UINT16_MAX;
+            }
+        }
+    }
+
+    // Find next timer
+    for(int i=0;i<active_node_num;i++){
+
+        node_table[i]._timer.timer_pending = FALSE;
+
+        if(timerisset(&node_table[i]._timer.time_next)){
+            // Find the closest sched time to the current time
+
+            if(timercmp(&time_now, &node_table[i]._timer.time_next, <) &&
+                timercmp(&next_sched, &node_table[i]._timer.time_next, >))
+            {
+                next_sched = node_table[i]._timer.time_next;
+                next_sched_router_id = node_table[i].raw_data.router_id;
             }
             else if(timercmp(&time_now, &node_table[i]._timer.time_next, <) &&     //
                     !timerisset(&next_sched)){
